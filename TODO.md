@@ -48,12 +48,19 @@
 
 ## 阶段 3：Electron IPC
 
-- [ ] 配置安全 BrowserWindow
-- [ ] 实现 Preload 白名单 API
-- [ ] 实现 `question:ask` IPC
-- [ ] 实现历史和系统 IPC 通道
-- [ ] 为 IPC 请求和响应建立类型
+- [x] 配置安全 BrowserWindow
+- [x] 实现 Preload 白名单 API
+- [x] 实现 `question:ask` IPC
+- [x] 实现历史和系统 IPC 通道
+- [x] 为 IPC 请求和响应建立类型
 - [ ] 编写 IPC 验证
+
+### 阶段 3 验证记录
+
+- 已完成 `contextIsolation: true`、`nodeIntegration: false`、`sandbox: true` 的 BrowserWindow 配置。
+- 已完成 Preload 白名单 API，渲染进程不直接接触 `ipcRenderer`。
+- `npm run typecheck` 通过，`npm run build:desktop` 通过。
+- Electron 二进制下载因当前网络下载未完成，尚未进行真实桌面进程 IPC 验证；该项保持未完成，不能进入阶段 4。
 
 ## 阶段 4：Spring Boot REST API
 

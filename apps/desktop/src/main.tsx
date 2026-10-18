@@ -6,7 +6,8 @@ import './styles.css';
 
 type Theme = 'light' | 'dark';
 type Role = 'user' | 'assistant';
-type Message = { id: string; role: Role; content: string };
+type Message = { id: string; role: Role; content: string; createdAt: string };
+const conversationId = 'local-conversation';
 
 function App() {
   const [theme, setTheme] = useState<Theme>('light');
@@ -17,18 +18,24 @@ function App() {
   const canSend = question.trim().length > 0 && !isLoading;
   const themeLabel = useMemo(() => theme === 'light' ? '切换到深色主题' : '切换到浅色主题', [theme]);
 
-  function submitQuestion(event: FormEvent) {
+  async function submitQuestion(event: FormEvent) {
     event.preventDefault();
     if (!canSend) return;
     const content = question.trim();
     setQuestion('');
-    setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'user', content }]);
+    const createdAt = new Date().toISOString();
+    setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'user', content, createdAt }]);
     setIsLoading(true);
-    // 阶段 2 仅用于展示 UI 状态；阶段 3 将替换为 Electron IPC。
-    window.setTimeout(() => {
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: 'assistant', content: '这是 UI 演示回答。\n\n- 当前正在展示 Markdown 渲染\n- 后续阶段将接入 Electron IPC 和 Spring Boot' }]);
-      setIsLoading(false);
-    }, 650);
+    const response = window.electronAPI
+      ? await window.electronAPI.askQuestion({ conversationId, question: content, history: messages })
+      : await new Promise<{ success: true; data: { messageId: string; answer: string } }>((resolve) => window.setTimeout(() => resolve({ success: true, data: { messageId: crypto.randomUUID(), answer: '这是浏览器预览回答。\n\n- Electron IPC 已在桌面端接入\n- 后续阶段将连接 Spring Boot' } }), 650));
+    if (response.success && response.data) {
+      const assistantMessage = { id: response.data.messageId, role: 'assistant' as const, content: response.data.answer, createdAt: new Date().toISOString() };
+      const nextMessages = [...messages, { id: crypto.randomUUID(), role: 'user' as const, content, createdAt }, assistantMessage];
+      setMessages((current) => [...current, assistantMessage]);
+      await window.electronAPI?.saveHistory({ id: conversationId, title: content.slice(0, 24), messages: nextMessages, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
+    setIsLoading(false);
   }
 
   return (
