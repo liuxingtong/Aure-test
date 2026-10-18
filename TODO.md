@@ -16,12 +16,16 @@
 - [x] 初始化 Spring Boot 3.x + Java 17
 - [x] 建立 Monorepo 目录和共享类型
 - [x] 配置统一开发启动脚本
-- [ ] 验证 Electron 和 Spring Boot 可独立启动
+- [x] 验证 Electron 和 Spring Boot 可独立启动
 
 ### 阶段 1 验证记录
 
 - 已完成脚手架文件、Spring Boot 健康检查入口和共享类型。
-- 当前环境缺少 `node`、`npm`、`java`、`mvn`，因此启动验证暂缓；安装运行时后必须先完成该项，再进入阶段 2。
+- 已在项目 `.tools/` 安装并验证 Node.js `v22.14.0`、npm `10.9.2`、Temurin/Zulu JDK `17.0.13` 和 Maven `3.9.9`。
+- `npm run typecheck` 通过。
+- `npm run build:desktop` 通过。
+- `mvn -f apps/backend/pom.xml test` 通过，当前无后端测试用例。
+- Spring Boot 已启动并验证 `GET /api/v1/health` 返回 `status: UP`。
 
 ## 阶段 2：基础 UI（OpenAI/ChatGPT 风格）
 

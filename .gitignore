@@ -1,0 +1,7 @@
+.DS_Store
+.tools/
+node_modules/
+apps/desktop/dist/
+apps/desktop/dist-electron/
+apps/backend/target/
+*.log
