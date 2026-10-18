@@ -7,7 +7,7 @@ cache:
   question-ttl: ${QUESTION_CACHE_TTL:5m}
 ai:
   enabled: false
-  base-url: ${AI_BASE_URL:https://api.deepseek.com/v1}
+  base-url: ${AI_BASE_URL:https://api.deepseek.com}
   api-key: ${AI_API_KEY:}
-  model: ${AI_MODEL:4.1flash}
+  model: ${AI_MODEL:deepseek-flash}
   timeout: ${AI_TIMEOUT:30s}

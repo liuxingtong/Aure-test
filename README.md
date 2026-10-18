@@ -17,7 +17,7 @@
 ./scripts/start-dev.sh
 ```
 
-当前配置使用 `https://api.deepseek.com/v1` 和 `4.1flash`；如果服务商返回模型不存在，请替换 `AI_MODEL` 为账户实际可用模型。
+当前配置使用 `https://api.deepseek.com` 和 `deepseek-flash`，对应 DeepSeek-V4.1-Flash；如账户模型列表不同，请以 `GET /models` 返回的 `id` 为准。
 
 ## 验证与打包
 
