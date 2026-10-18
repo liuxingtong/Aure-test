@@ -6,6 +6,7 @@
   "scripts": {
     "dev:desktop": "npm --workspace apps/desktop run dev",
     "build:desktop": "npm --workspace apps/desktop run build",
+    "verify:ipc": "npm --workspace apps/desktop run build:electron && electron scripts/verify-ipc.cjs",
     "typecheck": "npm --workspace packages/shared-types run typecheck && npm --workspace apps/desktop run typecheck"
   }
 }

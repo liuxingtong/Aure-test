@@ -53,14 +53,15 @@
 - [x] 实现 `question:ask` IPC
 - [x] 实现历史和系统 IPC 通道
 - [x] 为 IPC 请求和响应建立类型
-- [ ] 编写 IPC 验证
+- [x] 编写 IPC 验证
 
 ### 阶段 3 验证记录
 
 - 已完成 `contextIsolation: true`、`nodeIntegration: false`、`sandbox: true` 的 BrowserWindow 配置。
 - 已完成 Preload 白名单 API，渲染进程不直接接触 `ipcRenderer`。
 - `npm run typecheck` 通过，`npm run build:desktop` 通过。
-- Electron 二进制下载因当前网络下载未完成，尚未进行真实桌面进程 IPC 验证；该项保持未完成，不能进入阶段 4。
+- Electron 二进制已通过镜像安装并验证版本 `v35.7.5`。
+- `npm run verify:ipc` 通过：真实 Preload 调用了 `getVersion`、`question:ask`、`history:save/list/clear`，主进程返回 `questionSuccess: true` 且历史数量为 `1`。
 
 ## 阶段 4：Spring Boot REST API
 
