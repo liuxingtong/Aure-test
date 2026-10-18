@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.qa.service.QuestionService;
+import com.example.qa.ai.DemoAiClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -13,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(QuestionController.class)
-@Import(QuestionService.class)
+@Import({QuestionService.class, DemoAiClient.class})
 class QuestionControllerTest {
     @Autowired MockMvc mockMvc;
 

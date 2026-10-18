@@ -96,12 +96,19 @@
 
 ## 阶段 6：AI Adapter
 
-- [ ] 抽象 `AiClient`
-- [ ] 实现 AI Provider 适配器
-- [ ] 配置环境变量读取 API Key
-- [ ] 实现 Prompt 和上下文构造
-- [ ] 实现 Markdown 答案标准化
-- [ ] 编写 AI 调用测试和超时测试
+- [x] 抽象 `AiClient`
+- [x] 实现 AI Provider 适配器
+- [x] 配置环境变量读取 API Key
+- [x] 实现 Prompt 和上下文构造
+- [x] 实现 Markdown 答案标准化
+- [x] 编写 AI 调用测试和超时测试
+
+### 阶段 6 验证记录
+
+- `AiClient` 默认使用演示实现；配置 `AI_ENABLED=true` 后切换为 OpenAI-compatible `/chat/completions` 适配器。
+- API Key、模型、Base URL 和超时均通过环境变量读取，默认不启用外部 AI，避免未配置时启动失败。
+- Prompt 固定包含系统指令、历史上下文和当前问题，回答统一进行 Markdown 换行与空内容规范化。
+- `mvn -q -f apps/backend/pom.xml test` 通过，覆盖 Prompt 顺序、Markdown 规范化、AI 响应解析、空响应和读取超时。
 
 ## 阶段 7：Function Calling
 

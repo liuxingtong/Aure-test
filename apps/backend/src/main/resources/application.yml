@@ -3,3 +3,9 @@ server:
 spring:
   application:
     name: qa-backend
+ai:
+  enabled: false
+  base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+  api-key: ${AI_API_KEY:}
+  model: ${AI_MODEL:gpt-4o-mini}
+  timeout: ${AI_TIMEOUT:30s}
