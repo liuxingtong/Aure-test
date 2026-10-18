@@ -22,3 +22,5 @@ npm --workspace apps/desktop run package:dir
 
 正式发布前仍需 Apple Developer 签名、公证和真实可用的 DeepSeek 模型名确认。
 Windows `.exe` 已在 macOS 上完成构建和文件格式验证；由于当前不是 Windows 环境，需在 Windows 实机完成最终启动验证。
+
+Windows 迁移入口：`scripts/build-windows.ps1` 负责安装依赖、构建桌面包和后端 JAR；`scripts/run-windows.ps1` 负责读取本地环境变量、启动后端并打开桌面应用。

@@ -29,6 +29,8 @@ npm --workspace apps/desktop run package:dir
 
 `package:dir` 生成未签名的 macOS arm64 目录包到 `apps/desktop/release/mac-arm64`。正式发布还需要配置 Apple Developer 签名和公证。
 
+Windows 迁移：将源码包复制到 Windows 后，在 PowerShell 执行 `.\scripts\build-windows.ps1`；构建完成后执行 `.\scripts\run-windows.ps1`，脚本会启动 Spring Boot 和桌面应用。直接运行包可使用 `apps/desktop/release/win-unpacked/问答桌面应用.exe`。
+
 ## 目录结构
 
 - `apps/desktop`：Electron 主进程、Preload、React UI
