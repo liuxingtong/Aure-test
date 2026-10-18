@@ -65,12 +65,19 @@
 
 ## 阶段 4：Spring Boot REST API
 
-- [ ] 实现 `POST /api/v1/questions`
-- [ ] 实现 `GET /api/v1/health`
-- [ ] 实现 DTO 和参数校验
-- [ ] 配置 CORS 和请求限制
-- [ ] 实现全局异常处理
-- [ ] 编写 Controller/Service 测试
+- [x] 实现 `POST /api/v1/questions`
+- [x] 实现 `GET /api/v1/health`
+- [x] 实现 DTO 和参数校验
+- [x] 配置 CORS 和请求限制
+- [x] 实现全局异常处理
+- [x] 编写 Controller/Service 测试
+
+### 阶段 4 验证记录
+
+- `mvn -q -f apps/backend/pom.xml test` 通过，正常请求和空问题校验测试均通过。
+- Spring Boot 实际启动成功，`GET /api/v1/health` 返回 `status: UP`。
+- 实际 `POST /api/v1/questions` 返回 `success: true`、Markdown 答案和 `toolCalls` 字段。
+- 当前答案仍是后端演示实现，阶段 6 才接入真实 AI Adapter。
 
 ## 阶段 5：Electron 到后端联调
 
