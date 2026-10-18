@@ -1,0 +1,11 @@
+{
+  "name": "qa-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/desktop", "packages/shared-types"],
+  "scripts": {
+    "dev:desktop": "npm --workspace apps/desktop run dev",
+    "build:desktop": "npm --workspace apps/desktop run build",
+    "typecheck": "npm --workspace packages/shared-types run typecheck && npm --workspace apps/desktop run typecheck"
+  }
+}

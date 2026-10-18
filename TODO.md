@@ -12,11 +12,16 @@
 
 ## 阶段 1：项目脚手架
 
-- [ ] 初始化 Electron + React + TypeScript + Vite
-- [ ] 初始化 Spring Boot 3.x + Java 17
-- [ ] 建立 Monorepo 目录和共享类型
-- [ ] 配置统一开发启动脚本
+- [x] 初始化 Electron + React + TypeScript + Vite
+- [x] 初始化 Spring Boot 3.x + Java 17
+- [x] 建立 Monorepo 目录和共享类型
+- [x] 配置统一开发启动脚本
 - [ ] 验证 Electron 和 Spring Boot 可独立启动
+
+### 阶段 1 验证记录
+
+- 已完成脚手架文件、Spring Boot 健康检查入口和共享类型。
+- 当前环境缺少 `node`、`npm`、`java`、`mvn`，因此启动验证暂缓；安装运行时后必须先完成该项，再进入阶段 2。
 
 ## 阶段 2：基础 UI（OpenAI/ChatGPT 风格）
 
