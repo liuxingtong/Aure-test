@@ -19,6 +19,7 @@ export async function askBackend(request: AskQuestionRequest): Promise<AskQuesti
       return payload;
     } catch (error) {
       lastError = error;
+      console.warn(`[backend] request failed attempt=${attempt + 1} type=${error instanceof Error ? error.name : 'unknown'}`);
       if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
     } finally {
       clearTimeout(timeout);
