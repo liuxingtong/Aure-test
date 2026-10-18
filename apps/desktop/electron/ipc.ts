@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron';
 import type { AskQuestionRequest, AskQuestionResponse, Conversation } from '@qa-desktop/shared-types';
+import { askBackend } from './backend-client';
 
 const conversations = new Map<string, Conversation>();
 
@@ -7,7 +8,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('question:ask', async (_event, request: AskQuestionRequest): Promise<AskQuestionResponse> => {
     const question = request.question.trim();
     if (!question) return { success: false, error: { code: 'VALIDATION_ERROR', message: '问题不能为空', retryable: false } };
-    return { success: true, data: { messageId: crypto.randomUUID(), answer: `这是通过 Electron IPC 返回的演示回答。\n\n你刚刚问的是：**${question}**`, toolCalls: [] } };
+    return askBackend({ ...request, question });
   });
   ipcMain.handle('history:list', async (): Promise<Conversation[]> => [...conversations.values()]);
   ipcMain.handle('history:save', async (_event, conversation: Conversation): Promise<void> => { conversations.set(conversation.id, conversation); });

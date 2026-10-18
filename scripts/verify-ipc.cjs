@@ -20,7 +20,7 @@ app.whenReady().then(async () => {
     await window.electronAPI.saveHistory({ id: 'verify', title: 'IPC 验证', messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     const history = await window.electronAPI.listHistory();
     await window.electronAPI.clearHistory();
-    return { version, questionSuccess: question.success, answer: question.data.answer, historyCount: history.length };
+    return { version, questionSuccess: question.success, answer: question.data?.answer ?? question.error?.code, historyCount: history.length };
   })()`);
   console.log(JSON.stringify(result));
   app.quit();

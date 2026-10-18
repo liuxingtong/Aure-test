@@ -81,11 +81,18 @@
 
 ## 阶段 5：Electron 到后端联调
 
-- [ ] 实现主进程 HTTP Client
-- [ ] 实现超时和错误映射
-- [ ] 实现指数退避重试
-- [ ] 打通完整的模拟问答链路
-- [ ] 验证后端关闭时的 UI 错误状态
+- [x] 实现主进程 HTTP Client
+- [x] 实现超时和错误映射
+- [x] 实现指数退避重试
+- [x] 打通完整的模拟问答链路
+- [x] 验证后端关闭时的 UI 错误状态
+
+### 阶段 5 验证记录
+
+- Electron 主进程通过 `fetch` 调用 `http://127.0.0.1:8080/api/v1/questions`。
+- 请求设置 10 秒超时，连接失败最多重试 3 次，最终映射为 `BACKEND_UNAVAILABLE`。
+- Spring Boot 启动后运行 `npm run verify:ipc`，真实链路返回 Spring Boot 的演示答案，证明 Electron IPC → HTTP → REST 已打通。
+- 停止后端时 IPC 返回可重试错误，验证了后端不可用分支。
 
 ## 阶段 6：AI Adapter
 
