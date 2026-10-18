@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import { registerIpcHandlers } from './ipc';
+import { HistoryRepository } from './history-repository';
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -24,7 +25,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  registerIpcHandlers();
+  registerIpcHandlers(new HistoryRepository(path.join(app.getPath('userData'), 'conversations.json')));
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

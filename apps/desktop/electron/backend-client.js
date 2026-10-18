@@ -1,0 +1,29 @@
+const backendUrl = process.env.QA_BACKEND_URL ?? 'http://127.0.0.1:8080';
+export async function askBackend(request) {
+    let lastError;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10_000);
+        try {
+            const response = await fetch(`${backendUrl}/api/v1/questions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify(request),
+                signal: controller.signal
+            });
+            const payload = await response.json();
+            if (!response.ok)
+                return payload;
+            return payload;
+        }
+        catch (error) {
+            lastError = error;
+            if (attempt < 2)
+                await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
+        }
+        finally {
+            clearTimeout(timeout);
+        }
+    }
+    return { success: false, error: { code: 'BACKEND_UNAVAILABLE', message: '后端服务暂不可用，请确认 Spring Boot 已启动。', retryable: true } };
+}

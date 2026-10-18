@@ -128,12 +128,18 @@
 
 ## 阶段 8：本地会话历史
 
-- [ ] 定义 Conversation 和 Message 类型
-- [ ] 实现 `HistoryRepository`
-- [ ] 实现 JSON 文件存储
-- [ ] 实现启动时加载历史
-- [ ] 实现新建、切换、删除和清空会话
-- [ ] 编写历史存储测试
+- [x] 定义 Conversation 和 Message 类型
+- [x] 实现 `HistoryRepository`
+- [x] 实现 JSON 文件存储
+- [x] 实现启动时加载历史
+- [x] 实现新建、切换、删除和清空会话
+- [x] 编写历史存储测试
+
+### 阶段 8 验证记录
+
+- Electron 主进程使用用户数据目录下的 `conversations.json`，采用临时文件写入后重命名，避免半写入文件。
+- UI 启动时通过 IPC 加载历史，侧栏支持新建和切换；IPC 已提供删除与清空能力。
+- `npm --workspace apps/desktop run build` 通过；`npm run verify:ipc` 返回 `historyCount: 1` 与 `historyReloadedCount: 1`，验证持久化仓储的读写链路。
 
 ## 阶段 9：缓存、日志和监控
 
