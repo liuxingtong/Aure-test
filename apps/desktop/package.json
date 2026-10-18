@@ -11,7 +11,8 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "package:dir": "npm run build && npm run build:electron && electron-builder --dir"
+    "package:dir": "npm run build && npm run build:electron && electron-builder --dir",
+    "package:win": "npm run build && npm run build:electron && electron-builder --win dir --x64 --publish never"
   },
   "dependencies": {
     "@qa-desktop/shared-types": "*",
