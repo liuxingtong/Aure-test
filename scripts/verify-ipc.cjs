@@ -26,6 +26,7 @@ app.whenReady().then(async () => {
     await window.electronAPI.clearHistory();
     return { version, questionSuccess: question.success, answer: question.data?.answer ?? question.error?.code, historyCount: history.length, historyReloadedCount: historyReloaded.length };
   })()`);
+  if (!result.questionSuccess) throw new Error(`IPC question failed: ${result.answer}`);
   console.log(JSON.stringify(result));
   app.quit();
 });
