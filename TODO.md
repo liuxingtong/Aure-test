@@ -159,16 +159,17 @@
 
 ## 阶段 10：测试、打包和交付
 
-- [ ] 完成前端组件测试
+- [x] 完成前端组件测试
 - [x] 完成后端集成测试
 - [x] 完成 IPC 和联调测试
-- [ ] 配置 Electron Builder
-- [ ] 打包并验证桌面应用
-- [ ] 更新 README、架构文档和测试报告
-- [ ] 完成最终验收演示
+- [x] 配置 Electron Builder
+- [x] 打包并验证桌面应用
+- [x] 更新 README、架构文档和测试报告
+- [x] 完成最终验收演示
 
 ### 阶段 10 当前验证记录
 
 - 新增 `npm run verify:all`，依次执行后端测试、桌面生产构建和 Electron IPC 联调。
 - 验收脚本强制使用演示 AI，避免自动化验证消耗外部额度；真实 DeepSeek 调用由 `.env.local` 配置控制。
-- 前端组件测试、Electron Builder 打包和最终验收演示仍待完成，暂不提前标记。
+- 已完成组件测试、Electron Builder 目录打包、实际启动验证和交付文档；正式签名/公证属于发布环境工作。
+- 前端 Vitest 测试覆盖空状态和问答提交；Electron Builder 使用 macOS arm64 `--dir` 目标完成本地目录包验证。

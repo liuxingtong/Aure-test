@@ -2,26 +2,53 @@
   "name": "@qa-desktop/desktop",
   "version": "0.1.0",
   "private": true,
-  "main": "dist-electron/main.js",
+  "description": "OpenAI 风格的本地 AI 问答桌面应用",
+  "author": "QA Desktop Team",
+  "main": "dist-electron/electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "package:dir": "npm run build && npm run build:electron && electron-builder --dir"
   },
   "dependencies": {
     "@qa-desktop/shared-types": "*",
     "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^35.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.0",
     "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "electron-builder": "^26.15.3",
+    "jsdom": "^29.1.1",
     "typescript": "^5.7.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^5.0.5",
+    "electron": "35.7.5"
+  },
+  "build": {
+    "appId": "com.example.qa.desktop",
+    "productName": "问答桌面应用",
+    "asar": true,
+    "npmRebuild": false,
+    "electronDist": "../../node_modules/electron/dist",
+    "directories": { "output": "release" },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [{ "target": "dir", "arch": ["arm64"] }],
+      "category": "public.app-category.productivity"
+    }
   }
 }

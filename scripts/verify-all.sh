@@ -9,7 +9,7 @@ if [[ -x "$repo_root/.tools/zulu17.54.21-ca-jdk17.0.13-macosx_aarch64/zulu-17.jd
   export PATH="$repo_root/.tools/apache-maven-3.9.9/bin:$JAVA_HOME/bin:$repo_root/.tools/node-v22.14.0-darwin-arm64/bin:$PATH"
 fi
 
-echo '[1/3] backend tests'
+echo '[1/4] backend tests'
 mvn -q -f apps/backend/pom.xml test
 if [[ -f .env.local ]]; then
   set -a
@@ -25,8 +25,10 @@ for attempt in {1..30}; do
   if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then break; fi
   sleep 1
 done
-echo '[2/3] desktop production build'
+echo '[2/4] frontend component tests'
+npm --workspace apps/desktop run test
+echo '[3/4] desktop production build'
 npm run build:desktop
-echo '[3/3] electron ipc integration'
+echo '[4/4] electron ipc integration'
 npm run verify:ipc
 echo 'all verification checks passed'

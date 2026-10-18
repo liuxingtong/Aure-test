@@ -7,7 +7,7 @@ import './styles.css';
 type Theme = 'light' | 'dark';
 type Role = 'user' | 'assistant';
 type Message = { id: string; role: Role; content: string; createdAt: string };
-function App() {
+export function App() {
   const [theme, setTheme] = useState<Theme>('light');
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -70,4 +70,5 @@ function App() {
 
 export default App;
 
-createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<StrictMode><App /></StrictMode>);

@@ -3,6 +3,7 @@
 node_modules/
 apps/desktop/dist/
 apps/desktop/dist-electron/
+apps/desktop/release/
 apps/backend/target/
 *.log
 *.tsbuildinfo
