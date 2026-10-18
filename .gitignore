@@ -4,6 +4,7 @@ node_modules/
 apps/desktop/dist/
 apps/desktop/dist-electron/
 apps/desktop/release/
+artifacts/
 apps/backend/target/
 *.log
 *.tsbuildinfo
