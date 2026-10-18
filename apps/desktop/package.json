@@ -39,7 +39,6 @@
     "productName": "问答桌面应用",
     "asar": true,
     "npmRebuild": false,
-    "electronDist": "../../node_modules/electron/dist",
     "directories": { "output": "release" },
     "files": [
       "dist/**/*",
@@ -49,6 +48,10 @@
     "mac": {
       "target": [{ "target": "dir", "arch": ["arm64"] }],
       "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": [{ "target": "dir", "arch": ["x64"] }],
+      "artifactName": "qa-desktop-${version}-${arch}.${ext}"
     }
   }
 }
