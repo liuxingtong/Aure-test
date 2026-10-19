@@ -22,6 +22,7 @@ describe('App', () => {
     render(<App />);
 
     expect(await screen.findByText('正在启动后端服务…')).toBeInTheDocument();
+    expect(screen.getByLabelText('问题输入框')).not.toBeDisabled();
     expect(screen.getByRole('button', { name: '发送消息' })).toBeDisabled();
     statusListener?.({ state: 'ready', message: '后端服务已就绪' });
     expect(await screen.findByText('后端已就绪')).toBeInTheDocument();
