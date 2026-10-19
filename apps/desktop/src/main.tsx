@@ -104,9 +104,14 @@ export function App() {
     setIsLoading(true);
     try {
       const requestHistory = settings.memoryEnabled && settings.memory.trim() ? [{ id: 'memory', role: 'assistant' as const, content: `用户偏好与长期记忆：${settings.memory.trim()}`, createdAt: new Date(0).toISOString() }, ...messages] : messages;
-      const response = window.electronAPI
-        ? await window.electronAPI.askQuestion({ conversationId, question: content, history: requestHistory })
+      const request = { conversationId, question: content, history: requestHistory, model: settings.model };
+      let response = window.electronAPI
+        ? await window.electronAPI.askQuestion(request)
         : await new Promise<{ success: true; data: { messageId: string; answer: string } }>((resolve) => window.setTimeout(() => resolve({ success: true, data: { messageId: crypto.randomUUID(), answer: '这是浏览器预览回答。\n\n- Electron IPC 已在桌面端接入\n- 后续阶段将连接 Spring Boot' } }), 650));
+      if (!response.success && response.error?.code === 'DOCUMENT_SELECTION_REQUIRED' && window.electronAPI?.chooseDocument) {
+        const document = await window.electronAPI.chooseDocument();
+        if (document) response = await window.electronAPI.askQuestion({ ...request, document });
+      }
       if (response.success && response.data) {
         const assistantMessage = { id: response.data.messageId, role: 'assistant' as const, content: response.data.answer, createdAt: new Date().toISOString() };
         const nextMessages = [...messages, { id: crypto.randomUUID(), role: 'user' as const, content, createdAt }, assistantMessage];
@@ -143,7 +148,7 @@ export function App() {
           {!hasMessages && !isLoading ? <div className="welcome-state"><img className="welcome-mark" src={yunheMark} alt="yunhe" /><h1>有什么可以帮忙的？</h1><p>输入问题，开始一段新的对话。</p></div> : <div className="message-list">
             {messages.map((message) => <article className={`message-row ${message.role}`} key={message.id}><div className="message-avatar" aria-hidden="true">{message.role === 'user' ? '你' : <img src={yunheMark} alt="yunhe" />}</div><div className="message-content">{message.role === 'assistant' ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children, ...props }) => <a {...props} href={href} onClick={(event) => { if (href && /^(https?):$/i.test(new URL(href).protocol)) { event.preventDefault(); void window.electronAPI?.openExternal?.(href); } }}>{children}</a> }}>{message.content}</ReactMarkdown> : <p>{message.content}</p>}</div></article>)}
             {isLoading && <div className="message-row assistant"><div className="message-avatar" aria-hidden="true"><img src={yunheMark} alt="yunhe" /></div><div className="message-content loading-dots" aria-label="正在生成回答"><span /><span /><span /></div></div>}
-            {errorMessage && <div className="error-state" role="alert"><span>{errorMessage}</span><button type="button" onClick={() => { setQuestion(lastFailedQuestion); setErrorMessage(null); }} aria-label="重新尝试">重新尝试</button></div>}
+            {errorMessage && <div className="error-state" role="alert"><span>{errorMessage}</span><button type="button" onClick={() => { setMessages((current) => { const last = current[current.length - 1]; return last?.role === 'user' && last.content === lastFailedQuestion ? current.slice(0, -1) : current; }); setQuestion(lastFailedQuestion); setErrorMessage(null); }} aria-label="重新尝试">重新尝试</button></div>}
           </div>}
           {backendStatus.state !== 'ready' && <div className={`backend-status ${backendStatus.state === 'error' ? 'error' : ''}`} role="status"><span>{backendStatus.message || '正在启动后端服务…'}</span>{backendStatus.state === 'error' && <button type="button" onClick={() => void restartBackend()}>重新启动服务</button>}</div>}
         </section>
