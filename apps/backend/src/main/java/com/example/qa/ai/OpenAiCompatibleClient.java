@@ -4,15 +4,11 @@ import com.example.qa.model.ChatMessage;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-@Component
-@ConditionalOnProperty(prefix = "ai", name = "enabled", havingValue = "true")
-@EnableConfigurationProperties(AiProperties.class)
+/** @deprecated kept as a source-compatible test/embedding client; Spring uses ProviderAdapterAiClient. */
 public class OpenAiCompatibleClient implements AiClient {
     private final RestClient client;
     private final AiProperties properties;

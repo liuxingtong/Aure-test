@@ -58,6 +58,7 @@ app.whenReady().then(() => {
       await backendManager.stop();
       const settings = await settingsStore.get();
       process.env.AI_ENABLED = settings.apiKey ? 'true' : 'false';
+      process.env.AI_PROVIDER = settings.provider;
       process.env.AI_BASE_URL = settings.baseUrl;
       process.env.AI_MODEL = settings.model;
       process.env.AI_API_KEY = settings.apiKey;
@@ -66,6 +67,7 @@ app.whenReady().then(() => {
   );
   const startup = settingsStore.get().then((settings) => {
     process.env.AI_ENABLED = settings.apiKey ? 'true' : 'false';
+    process.env.AI_PROVIDER = settings.provider;
     process.env.AI_BASE_URL = settings.baseUrl;
     process.env.AI_MODEL = settings.model;
     process.env.AI_API_KEY = settings.apiKey;

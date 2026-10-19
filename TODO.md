@@ -168,6 +168,9 @@
 
 ## 阶段 12：账户连接、主题与归档
 
+- [x] 建立统一 Provider Adapter 接口，接入 DeepSeek、OpenAI 与 OpenAI 兼容 Chat Completions
+- [ ] 预留 Responses API、Anthropic Messages API、Ollama 原生协议扩展点
+
 - [x] 将主题切换移至聊天区右上角图标
 - [x] 将左下角区域改为本地账户入口
 - [x] 支持 DeepSeek、OpenAI 和其他 OpenAI 兼容 Chat Completions 服务
