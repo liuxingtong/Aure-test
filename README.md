@@ -1,4 +1,4 @@
-# Aure
+# yunhe
 
 一个 Electron + React + Spring Boot 的本地 AI 问答桌面应用，界面采用 OpenAI/ChatGPT 风格，支持 Markdown、会话历史、AI Adapter 和 Function Calling。
 

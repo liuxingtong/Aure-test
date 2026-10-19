@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AiProvider, AiSettings, Conversation } from '@qa-desktop/shared-types';
 import './styles.css';
+import yunheMark from './assets/yunhe-mark.png';
 
 type Theme = 'light' | 'dark';
 type Role = 'user' | 'assistant';
@@ -115,7 +116,7 @@ export function App() {
   return (
     <div className="app-shell" data-theme={theme}>
       <aside className="sidebar" aria-label="会话列表">
-        <div className="sidebar-header"><img className="app-mark" src="/aure-mark.png" alt="Aure" /><span>Aure</span></div>
+        <div className="sidebar-header"><img className="app-mark" src={yunheMark} alt="yunhe" /><span>yunhe</span></div>
         <button className="new-chat-button" type="button" onClick={() => { setConversationId(crypto.randomUUID()); setMessages([]); }}><span className="button-icon" aria-hidden="true">＋</span>新建对话</button>
         <div className="history-tabs"><button className={!showArchived ? 'selected' : ''} type="button" onClick={() => setShowArchived(false)}>历史记录</button><button className={showArchived ? 'selected' : ''} type="button" onClick={() => setShowArchived(true)}>已归档</button></div>
         <div className="conversation-list">{visibleConversations.length ? visibleConversations.map((conversation) => <div className={`conversation-item-wrap ${conversation.id === conversationId ? 'active' : ''}`} key={conversation.id}><button className="conversation-item" type="button" onClick={() => { setConversationId(conversation.id); setMessages(conversation.messages); }}>{conversation.title || '未命名对话'}</button><button className="conversation-archive" type="button" aria-label={showArchived ? '恢复对话' : '归档对话'} onClick={() => void archiveConversation(conversation.id, !showArchived)}>{showArchived ? '↩' : '…'}</button></div>) : <div className="empty-history">{showArchived ? '暂无归档对话' : '暂无历史记录'}</div>}</div>
@@ -125,7 +126,7 @@ export function App() {
       <main className="chat-panel">
         <header className="chat-header"><span className="chat-title">{conversations.find((conversation) => conversation.id === conversationId)?.title || '新对话'}</span><div className="header-actions"><button className="icon-button" type="button" aria-label={themeLabel} title={themeLabel} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? '☾' : '☀'}</button><span className={`connection-state ${backendReady ? 'ready' : 'not-ready'}`}><span className="status-dot" />{backendReady ? '后端已就绪' : backendStatus.state === 'error' ? '后端启动失败' : '正在连接后端'}</span></div></header>
         <section className={`message-area ${hasMessages ? 'has-messages' : ''}`} aria-live="polite">
-          {!hasMessages && !isLoading ? <div className="welcome-state"><img className="welcome-mark" src="/aure-mark.png" alt="Aure" /><h1>有什么可以帮忙的？</h1><p>输入问题，开始一段新的对话。</p></div> : <div className="message-list">
+          {!hasMessages && !isLoading ? <div className="welcome-state"><img className="welcome-mark" src={yunheMark} alt="yunhe" /><h1>有什么可以帮忙的？</h1><p>输入问题，开始一段新的对话。</p></div> : <div className="message-list">
             {messages.map((message) => <article className={`message-row ${message.role}`} key={message.id}><div className="message-avatar" aria-hidden="true">{message.role === 'user' ? '你' : '问'}</div><div className="message-content">{message.role === 'assistant' ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown> : <p>{message.content}</p>}</div></article>)}
             {isLoading && <div className="message-row assistant"><div className="message-avatar" aria-hidden="true">问</div><div className="message-content loading-dots" aria-label="正在生成回答"><span /><span /><span /></div></div>}
             {errorMessage && <div className="error-state" role="alert"><span>{errorMessage}</span><button type="button" onClick={() => { setQuestion(lastFailedQuestion); setErrorMessage(null); }} aria-label="重新尝试">重新尝试</button></div>}
