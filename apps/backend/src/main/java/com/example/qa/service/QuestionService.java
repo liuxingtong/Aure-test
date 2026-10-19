@@ -35,7 +35,7 @@ public class QuestionService {
         } else {
             try {
                 log.info("processing question conversationId={} historySize={}", request.conversationId(), request.history().size());
-                var result = toolCallingService.answerWithTools(request.history(), request.question(), request.model(), request.document());
+                var result = toolCallingService.answerWithTools(request.history(), request.question(), request.model(), request.document(), request.documents());
                 answer = result.answer();
                 cache.put(key, answer);
                 var toolCalls = result.toolCalls();

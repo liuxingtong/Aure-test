@@ -37,6 +37,16 @@ button, textarea { font: inherit; } button { cursor: pointer; }
 .composer-model { flex:0 0 auto; max-width:180px; margin:0 10px; padding:7px 8px; color:var(--text-secondary); background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:7px; font-size:12px; outline:0; } .composer-model:focus { border-color:var(--accent-color); color:var(--text-primary); }
 .send-button { display:grid; flex:0 0 30px; place-items:center; width:30px; height:30px; color:var(--send-fg); background:var(--send-bg); border:0; border-radius:8px; font-size:19px; line-height:1; } .send-button:disabled { cursor:default; opacity:.4; }
 .composer-hint { width:min(100%,800px); margin:8px auto 0; color:var(--text-secondary); font-size:11px; text-align:center; }
+/* Attachment chips (above composer + inline in user bubbles) */
+.attachment-chips { display:flex; flex-wrap:wrap; gap:6px; width:min(100%,800px); margin:0 auto 8px; padding:0 4px; }
+.attachment-chips.inline { margin:0 0 6px; padding:0; }
+.attachment-chip { display:inline-flex; gap:6px; align-items:center; padding:4px 4px 4px 8px; color:var(--text-primary); background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:14px; font-size:12px; line-height:1; }
+.attachment-icon { font-size:12px; }
+.attachment-name { max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.attachment-remove { display:grid; place-items:center; width:18px; height:18px; color:var(--text-secondary); background:transparent; border:0; border-radius:50%; font-size:14px; line-height:1; }
+.attachment-remove:hover { color:var(--text-primary); background:var(--bg-tertiary); }
+.composer-attach { display:grid; flex:0 0 30px; place-items:center; width:30px; height:30px; color:var(--text-secondary); background:transparent; border:0; border-radius:8px; font-size:20px; line-height:1; }
+.composer-attach:hover { color:var(--text-primary); background:var(--bg-tertiary); }
 @media (max-width:800px) { .sidebar { flex-basis:220px; } .chat-header { padding:0 18px; } .composer-wrap { padding-right:18px; padding-left:18px; } }
 /* Thinking (reasoning) block */
 .thinking-block { margin:0 0 10px; color:var(--text-secondary); }
