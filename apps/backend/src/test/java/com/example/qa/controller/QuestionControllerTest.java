@@ -13,6 +13,7 @@ import com.example.qa.tools.ToolRegistry;
 import com.example.qa.cache.QuestionCache;
 import com.example.qa.monitoring.QaMetrics;
 import com.example.qa.monitoring.RequestSizeFilter;
+import com.example.qa.monitoring.TraceWriter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,7 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(QuestionController.class)
-@Import({QuestionService.class, DemoAiClient.class, ToolCallingService.class, ToolRegistry.class, CalculateTool.class, SearchLatestNewsTool.class, QuestionCache.class, QaMetrics.class, RequestSizeFilter.class})
+@Import({QuestionService.class, DemoAiClient.class, ToolCallingService.class, ToolRegistry.class, CalculateTool.class, SearchLatestNewsTool.class, QuestionCache.class, QaMetrics.class, RequestSizeFilter.class, TraceWriter.class})
 class QuestionControllerTest {
     @Autowired MockMvc mockMvc;
 

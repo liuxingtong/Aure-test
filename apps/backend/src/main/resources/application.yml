@@ -12,3 +12,4 @@ ai:
   api-key: ${AI_API_KEY:}
   model: ${AI_MODEL:deepseek-chat}
   timeout: ${AI_TIMEOUT:30s}
+  trace-directory: ${AI_TRACE_DIRECTORY:}

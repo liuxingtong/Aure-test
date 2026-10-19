@@ -89,7 +89,12 @@ export class BackendProcessManager {
     const command = this.command();
     const child = this.spawn(command.command, command.args, {
       cwd: command.cwd,
-      env: { ...process.env, ...(this.options.getEnvironment?.() ?? {}), AI_ENABLED: this.options.getEnvironment?.().AI_ENABLED ?? process.env.AI_ENABLED ?? 'false' }
+      env: {
+        ...process.env,
+        ...(this.options.getEnvironment?.() ?? {}),
+        AI_ENABLED: this.options.getEnvironment?.().AI_ENABLED ?? process.env.AI_ENABLED ?? 'false',
+        AI_TRACE_DIRECTORY: path.join(this.options.userDataPath, 'traces')
+      }
     });
     this.child = child;
     this.attachOutput(child);

@@ -8,6 +8,8 @@ import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.example.qa.monitoring.TraceWriter;
 
 @Service
 public class ToolCallingService {
@@ -15,13 +17,20 @@ public class ToolCallingService {
     private final AiClient aiClient;
     private final ToolRegistry registry;
     private final ToolCallParser parser;
+    private final TraceWriter traceWriter;
 
     public record AnswerResult(String answer, List<String> toolCalls) {}
 
     public ToolCallingService(AiClient aiClient, ToolRegistry registry, ObjectMapper mapper) {
+        this(aiClient, registry, mapper, new TraceWriter((java.nio.file.Path) null, mapper));
+    }
+
+    @Autowired
+    public ToolCallingService(AiClient aiClient, ToolRegistry registry, ObjectMapper mapper, TraceWriter traceWriter) {
         this.aiClient = aiClient;
         this.registry = registry;
         this.parser = new ToolCallParser(mapper);
+        this.traceWriter = traceWriter;
     }
 
     public String answer(List<ChatMessage> history, String question) {
@@ -38,7 +47,9 @@ public class ToolCallingService {
             return new AnswerResult(result, List.of("search_latest_news"));
         }
         var context = new ArrayList<>(history == null ? List.of() : history);
+        var traceId = java.util.UUID.randomUUID().toString();
         var answer = aiClient.chat(context, question, model);
+        traceWriter.write(java.util.Map.of("traceId", traceId, "type", "model_output", "model", model == null ? "" : model, "question", question, "history", context, "content", answer));
         var callsUsed = 0;
         var toolCalls = new ArrayList<String>();
         while (true) {
@@ -49,11 +60,13 @@ public class ToolCallingService {
                 var arguments = call.arguments();
                 if ("read_document".equals(call.name()) && document != null && arguments instanceof ObjectNode object) object.set("document", document);
                 var result = registry.execute(call.name(), arguments);
+                traceWriter.write(java.util.Map.of("traceId", traceId, "type", "tool_result", "name", call.name(), "arguments", arguments, "result", result));
                 context.add(new ChatMessage("tool-" + callsUsed, "tool", call.name() + " 结果：" + result, "now"));
                 toolCalls.add(call.name());
                 callsUsed++;
             }
             answer = aiClient.chat(context, question, model);
+            traceWriter.write(java.util.Map.of("traceId", traceId, "type", "model_output", "model", model == null ? "" : model, "question", question, "history", context, "content", answer));
         }
     }
 
