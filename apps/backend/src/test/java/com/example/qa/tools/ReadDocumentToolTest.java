@@ -27,9 +27,9 @@ class ReadDocumentToolTest {
     @Test
     void rejectsPathArgumentsAndUnsupportedExtensions() throws Exception {
         assertThatThrownBy(() -> tool.execute(mapper.createObjectNode().put("path", "/tmp/secret.txt")))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("path");
+                .isInstanceOf(ToolException.class).extracting("code").isEqualTo("INVALID_TOOL_ARGUMENTS");
         var args = mapper.createObjectNode();
         args.putObject("document").put("name", "secret.exe").put("extension", "exe").put("content", "x");
-        assertThatThrownBy(() -> tool.execute(args)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("扩展名");
+        assertThatThrownBy(() -> tool.execute(args)).isInstanceOf(ToolException.class).extracting("code").isEqualTo("INVALID_TOOL_ARGUMENTS");
     }
 }

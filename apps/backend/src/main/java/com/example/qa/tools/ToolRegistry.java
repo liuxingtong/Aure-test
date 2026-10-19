@@ -32,7 +32,15 @@ public class ToolRegistry {
 
     public String execute(String name, JsonNode arguments) {
         var tool = tools.get(name);
-        if (tool == null) throw new IllegalArgumentException("未知工具：" + name);
-        return tool.execute(arguments);
+        if (tool == null) throw new ToolException("UNKNOWN_TOOL", "未知工具：" + name, false);
+        try {
+            return tool.execute(arguments);
+        } catch (ToolException exception) {
+            throw exception;
+        } catch (IllegalArgumentException exception) {
+            throw new ToolException("INVALID_TOOL_ARGUMENTS", exception.getMessage(), false);
+        } catch (RuntimeException exception) {
+            throw new ToolException("TOOL_EXECUTION_FAILED", "工具执行失败", false);
+        }
     }
 }
