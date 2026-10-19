@@ -27,9 +27,9 @@ npm --workspace apps/desktop run test
 npm --workspace apps/desktop run package:dir
 ```
 
-`package:dir` 生成未签名的 macOS arm64 目录包到 `apps/desktop/release/mac-arm64`。正式发布还需要配置 Apple Developer 签名和公证。
+正式版会把 Spring Boot JAR 和平台 Java Runtime 放进应用资源，用户双击应用后由 Electron 自动启动后端并等待健康检查。macOS arm64 打包前设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，然后执行 `./scripts/prepare-backend-runtime.sh`；资源校验命令为 `node scripts/verify-runtime-assets.cjs --platform darwin --arch arm64`。`package:dir` 生成未签名的 macOS arm64 目录包到 `apps/desktop/release/mac-arm64`。正式发布还需要配置 Apple Developer 签名和公证。
 
-Windows 迁移：将源码包复制到 Windows 后，在 PowerShell 执行 `.\scripts\build-windows.ps1`；构建完成后执行 `.\scripts\run-windows.ps1`，脚本会启动 Spring Boot 和桌面应用。直接运行包可使用 `apps/desktop/release/win-unpacked/问答桌面应用.exe`。
+Windows 迁移：将源码包复制到 Windows 后，在 PowerShell 设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，执行 `.\scripts\build-windows.ps1`。构建脚本会准备后端和 Runtime；直接双击 `apps/desktop/release/win-unpacked/问答桌面应用.exe` 即可一键启动全部服务。Windows 正式发布还需要代码签名，并在目标机器检查杀毒软件误报。
 
 ## 目录结构
 

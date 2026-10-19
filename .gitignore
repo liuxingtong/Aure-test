@@ -5,6 +5,7 @@ apps/desktop/dist/
 apps/desktop/dist-electron/
 apps/desktop/release/
 artifacts/
+runtime/
 apps/backend/target/
 *.log
 *.tsbuildinfo

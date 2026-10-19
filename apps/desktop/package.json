@@ -48,11 +48,19 @@
     ],
     "mac": {
       "target": [{ "target": "dir", "arch": ["arm64"] }],
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "extraResources": [
+        { "from": "../../runtime/backend", "to": "backend" },
+        { "from": "../../runtime/jre/mac-arm64", "to": "jre/mac-arm64" }
+      ]
     },
     "win": {
       "target": [{ "target": "dir", "arch": ["x64"] }],
-      "artifactName": "qa-desktop-${version}-${arch}.${ext}"
+      "artifactName": "qa-desktop-${version}-${arch}.${ext}",
+      "extraResources": [
+        { "from": "../../runtime/backend", "to": "backend" },
+        { "from": "../../runtime/jre/win-x64", "to": "jre/win-x64" }
+      ]
     }
   }
 }
