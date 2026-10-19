@@ -11,7 +11,7 @@ type Message = { id: string; role: Role; content: string; createdAt: string };
 type BackendStatus = { state: 'starting' | 'ready' | 'error' | 'stopped'; message?: string };
 const providerPresets: Record<AiProvider, { label: string; baseUrl: string; models: string[]; protocol: string }> = {
   deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-flash', 'deepseek-v4-pro'], protocol: 'OpenAI 兼容 Chat Completions（支持 Responses API）' },
-  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-5.1', 'gpt-5', 'gpt-5-mini', 'gpt-4.1'], protocol: 'OpenAI Chat Completions' },
+  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-cyber'], protocol: 'OpenAI Chat Completions' },
   'openai-compatible': { label: 'OpenAI 兼容服务', baseUrl: 'http://localhost:11434/v1', models: [], protocol: 'OpenAI 兼容 Chat Completions' }
 };
 export function App() {
