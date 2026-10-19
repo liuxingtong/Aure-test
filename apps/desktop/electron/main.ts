@@ -1,4 +1,5 @@
 import { app, BrowserWindow, safeStorage } from 'electron';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { BackendStatusBroadcaster, registerIpcHandlers } from './ipc';
 import { BackendProcessManager } from './backend-process-manager';
@@ -30,10 +31,12 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   if (!hasSingleInstanceLock) return;
   const statusBroadcaster = new BackendStatusBroadcaster();
-  const settingsStore = new SettingsStore(path.join(app.getPath('userData'), 'settings.json'), {
+  const userDataPath = app.getPath('userData');
+  await migrateLegacyUserData(userDataPath);
+  const settingsStore = new SettingsStore(path.join(userDataPath, 'settings.json'), {
     encrypt: (value) => safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(value).toString('base64') : value,
     decrypt: (value) => safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(value, 'base64')) : value
   });
@@ -41,7 +44,7 @@ app.whenReady().then(() => {
     mode: app.isPackaged ? 'production' : 'development',
     platform: process.platform,
     resourcesPath: process.resourcesPath,
-    userDataPath: app.getPath('userData'),
+    userDataPath,
     projectRoot: path.resolve(__dirname, '../../..'),
     getEnvironment: () => process.env
   });
@@ -51,7 +54,7 @@ app.whenReady().then(() => {
     for (const window of BrowserWindow.getAllWindows()) window.webContents.send('backend:status', status);
   });
   registerIpcHandlers(
-    new HistoryRepository(path.join(app.getPath('userData'), 'conversations.json')),
+    new HistoryRepository(path.join(userDataPath, 'conversations.json')),
     settingsStore,
     () => statusBroadcaster.current(),
     async () => {
@@ -97,3 +100,22 @@ app.on('second-instance', () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+async function migrateLegacyUserData(userDataPath: string): Promise<void> {
+  const legacyDirectory = path.join(app.getPath('appData'), '@qa-desktop', 'desktop');
+  await fs.mkdir(userDataPath, { recursive: true });
+  for (const file of ['conversations.json', 'settings.json']) {
+    const destination = path.join(userDataPath, file);
+    try {
+      await fs.access(destination);
+      continue;
+    } catch {
+      // Destination does not exist; copy legacy data if available.
+    }
+    try {
+      await fs.copyFile(path.join(legacyDirectory, file), destination);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+  }
+}
