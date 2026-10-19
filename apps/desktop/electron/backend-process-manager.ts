@@ -43,6 +43,7 @@ const BACKEND_HOST = '127.0.0.1';
 const BACKEND_PORT = 8080;
 const HEALTH_URL = `http://${BACKEND_HOST}:${BACKEND_PORT}/api/v1/health`;
 const HEALTH_TIMEOUT_MS = 30_000;
+const STOP_TIMEOUT_MS = 3_000;
 const POLL_INTERVAL_MS = 500;
 const MAX_LOG_BYTES = 2 * 1024 * 1024;
 
@@ -118,8 +119,11 @@ export class BackendProcessManager {
     const child = this.child;
     this.child = undefined;
     if (child && !child.killed) {
+      const exited = new Promise<void>((resolve) => {
+        child.once('exit', () => resolve());
+      });
       child.kill('SIGTERM');
-      await this.clock.sleep(50);
+      await Promise.race([exited, this.clock.sleep(STOP_TIMEOUT_MS)]);
     }
     this.setStatus({ state: 'stopped' });
   }

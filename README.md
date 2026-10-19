@@ -23,6 +23,8 @@
 
 ```bash
 npm run verify:all
+npm run verify:startup:mac
+npm run verify:startup:windows
 npm --workspace apps/desktop run test
 npm --workspace apps/desktop run package:dir
 ```
