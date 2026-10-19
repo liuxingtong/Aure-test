@@ -54,6 +54,7 @@ export class BackendProcessManager {
   private child: SpawnedChild | undefined;
   private childExitMessage: string | undefined;
   private status: BackendStatus = { state: 'stopped' };
+  private readonly statusListeners = new Set<(status: BackendStatus) => void>();
 
   constructor(options: BackendProcessManagerOptions) {
     this.options = { ...options, arch: options.arch ?? process.arch };
@@ -67,10 +68,15 @@ export class BackendProcessManager {
     return { ...this.status };
   }
 
+  onStatusChange(listener: (status: BackendStatus) => void): () => void {
+    this.statusListeners.add(listener);
+    return () => this.statusListeners.delete(listener);
+  }
+
   async start(): Promise<BackendStatus> {
     if (this.status.state === 'ready' || this.status.state === 'starting') return this.getStatus();
 
-    this.status = { state: 'starting', message: '正在启动后端服务…' };
+    this.setStatus({ state: 'starting', message: '正在启动后端服务…' });
     this.childExitMessage = undefined;
 
     if (await this.portInUse()) {
@@ -86,7 +92,7 @@ export class BackendProcessManager {
     this.attachOutput(child);
     child.once('exit', (code) => {
       this.childExitMessage = `后端进程已退出（代码 ${code ?? 'unknown'}）。`;
-      if (this.status.state === 'starting' || this.status.state === 'ready') this.status = { state: 'error', message: this.childExitMessage };
+      if (this.status.state === 'starting' || this.status.state === 'ready') this.setStatus({ state: 'error', message: this.childExitMessage });
     });
 
     const deadline = this.clock.now() + HEALTH_TIMEOUT_MS;
@@ -95,7 +101,7 @@ export class BackendProcessManager {
       try {
         const response = await this.fetch(HEALTH_URL, { signal: AbortSignal.timeout(2_000) });
         if (response.ok) {
-          this.status = { state: 'ready', message: '后端服务已就绪' };
+          this.setStatus({ state: 'ready', message: '后端服务已就绪' });
           return this.getStatus();
         }
       } catch {
@@ -114,11 +120,11 @@ export class BackendProcessManager {
       child.kill('SIGTERM');
       await this.clock.sleep(50);
     }
-    this.status = { state: 'stopped' };
+    this.setStatus({ state: 'stopped' });
   }
 
   private fail(message: string): BackendStatus {
-    this.status = { state: 'error', message };
+    this.setStatus({ state: 'error', message });
     if (this.child && !this.child.killed) this.child.kill('SIGTERM');
     return this.getStatus();
   }
@@ -144,6 +150,11 @@ export class BackendProcessManager {
     };
     child.stdout?.on('data', write);
     child.stderr?.on('data', write);
+  }
+
+  private setStatus(status: BackendStatus): void {
+    this.status = { ...status };
+    for (const listener of this.statusListeners) listener(this.getStatus());
   }
 }
 

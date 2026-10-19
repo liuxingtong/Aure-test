@@ -12,7 +12,9 @@ describe('App', () => {
       clearHistory: vi.fn().mockResolvedValue(undefined),
       askQuestion: vi.fn(),
       getVersion: vi.fn(),
-      checkBackend: vi.fn()
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined)
     };
 
     render(<App />);
@@ -30,7 +32,9 @@ describe('App', () => {
       clearHistory: vi.fn().mockResolvedValue(undefined),
       askQuestion: vi.fn().mockResolvedValue({ success: true, data: { messageId: 'answer-1', answer: '# 已回答\n\n内容' } }),
       getVersion: vi.fn(),
-      checkBackend: vi.fn()
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined)
     };
 
     render(<App />);
@@ -39,7 +43,7 @@ describe('App', () => {
 
     expect(await screen.findByText('已回答')).toBeInTheDocument();
     expect(screen.getByText('内容')).toBeInTheDocument();
-    expect(window.electronAPI.askQuestion).toHaveBeenCalledTimes(1);
+    expect(window.electronAPI?.askQuestion).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the question and shows a retryable error when backend fails', async () => {
@@ -51,7 +55,9 @@ describe('App', () => {
       clearHistory: vi.fn().mockResolvedValue(undefined),
       askQuestion: vi.fn().mockResolvedValue({ success: false, error: { code: 'BACKEND_UNAVAILABLE', message: '后端服务暂不可用，请稍后重试', retryable: true } }),
       getVersion: vi.fn(),
-      checkBackend: vi.fn()
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined)
     };
 
     render(<App />);
