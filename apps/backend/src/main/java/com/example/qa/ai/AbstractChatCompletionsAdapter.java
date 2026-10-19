@@ -12,8 +12,6 @@ import org.springframework.web.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-record ChatResult(String content, String thinking) {}
-
 abstract class AbstractChatCompletionsAdapter implements ProviderAdapter {
     private static final Logger log = LoggerFactory.getLogger(AbstractChatCompletionsAdapter.class);
     private final RestClient client;
