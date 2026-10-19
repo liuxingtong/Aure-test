@@ -4,10 +4,11 @@
 
 ## 2026-10-19 修复复验
 
-- 后端 `mvn test`：44 个用例全部通过。
+- 后端 `mvn test`：46 个用例全部通过。
 - 前端 `vitest run`：22 个用例全部通过；`typecheck` 和 `build:desktop` 通过。
 - 真实 DeepSeek 链路验证：问题“能否写一条数学公式并调用工具计算”返回 `success: true`、`toolCalls: ["calculate"]` 和最终 Markdown 答案，不再出现 `missing field tool_call_id` 的 422。
 - 使用假 Chat Completions 服务验证工具回填顺序：第二次请求为 `system/assistant/user/user`，没有非法的 `role: tool`。
+- `ToolCallParser` 增加对模型漏写 `tool_calls` 数组结尾 `]` 的容错恢复，并新增回归测试；无法恢复时返回 `INVALID_TOOL_ARGUMENTS`，不再把原始 JSON 当答案显示。
 - 已重新生成 `release/mac-arm64/yunhe.app`，后端 JAR 与 `runtime/backend/qa-backend-0.1.0.jar` 哈希一致。
 - 已知环境限制：当前 DSH 外层 sandbox 下 Electron 的 OS sandbox 无法启动，`verify:ipc` 需在普通终端运行；应用本体已通过 `open` 启动并健康检查通过。
 

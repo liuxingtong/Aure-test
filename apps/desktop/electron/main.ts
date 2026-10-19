@@ -24,11 +24,23 @@ function createWindow() {
     }
   });
 
+  window.center();
+  window.once('ready-to-show', () => {
+    // 某些 macOS 显示/Stage Manager 状态下窗口会以隐藏或离屏状态恢复，这里强制回前台。
+    window.show();
+    window.focus();
+  });
+
   if (process.env.VITE_DEV_SERVER_URL) {
     void window.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
-    void window.loadFile(path.join(__dirname, '../../dist/index.html'));
+    void window.loadFile(path.join(__dirname, '../../dist/index.html')).catch((error) => {
+      console.error('[main] failed to load renderer', error);
+      window.show();
+    });
   }
+  window.show();
+  window.focus();
 }
 
 app.whenReady().then(async () => {
@@ -87,7 +99,15 @@ app.whenReady().then(async () => {
     void backendManager.stop().finally(() => app.exit(0));
   });
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    const windows = BrowserWindow.getAllWindows();
+    if (windows.length === 0) {
+      createWindow();
+      return;
+    }
+    const window = windows[0];
+    if (window.isMinimized()) window.restore();
+    window.show();
+    window.focus();
   });
 });
 
@@ -95,6 +115,7 @@ app.on('second-instance', () => {
   const window = BrowserWindow.getAllWindows()[0];
   if (window) {
     if (window.isMinimized()) window.restore();
+    window.show();
     window.focus();
   }
 });
