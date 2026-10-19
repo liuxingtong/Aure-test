@@ -46,4 +46,19 @@ export function registerIpcHandlers(
   ipcMain.handle('backend:restart', async (): Promise<BackendStatus> => restartBackend());
   ipcMain.handle('settings:get-ai', async (): Promise<AiSettings> => settingsStore.get());
   ipcMain.handle('settings:save-ai', async (_event, settings: AiSettings): Promise<AiSettings> => settingsStore.save(settings));
+  ipcMain.handle('settings:list-models', async (_event, settings: AiSettings): Promise<string[]> => {
+    const endpoint = `${settings.baseUrl.replace(/\/$/, '')}/models`;
+    try {
+      const response = await fetch(endpoint, { headers: settings.apiKey ? { Authorization: `Bearer ${settings.apiKey}` } : {} });
+      if (!response.ok) return [];
+      const payload = await response.json() as { data?: Array<{ id?: string }> };
+      return (payload.data ?? []).flatMap((model) => model.id && !isNonChatModel(model.id) ? [model.id] : []);
+    } catch {
+      return [];
+    }
+  });
+}
+
+function isNonChatModel(id: string): boolean {
+  return /(?:embedding|moderation|whisper|tts|dall-e|image|audio|realtime|transcribe|search-preview)/i.test(id);
 }

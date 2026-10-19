@@ -10,8 +10,8 @@ type Role = 'user' | 'assistant';
 type Message = { id: string; role: Role; content: string; createdAt: string };
 type BackendStatus = { state: 'starting' | 'ready' | 'error' | 'stopped'; message?: string };
 const providerPresets: Record<AiProvider, { label: string; baseUrl: string; models: string[]; protocol: string }> = {
-  deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-chat', 'deepseek-reasoner'], protocol: 'OpenAI 兼容 Chat Completions' },
-  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4.1-mini', 'gpt-4.1'], protocol: 'OpenAI 兼容 Chat Completions' },
+  deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-flash', 'deepseek-v4-pro'], protocol: 'OpenAI 兼容 Chat Completions（支持 Responses API）' },
+  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-5.1', 'gpt-5', 'gpt-5-mini', 'gpt-4.1'], protocol: 'OpenAI Chat Completions' },
   'openai-compatible': { label: 'OpenAI 兼容服务', baseUrl: 'http://localhost:11434/v1', models: [], protocol: 'OpenAI 兼容 Chat Completions' }
 };
 export function App() {
@@ -28,10 +28,11 @@ export function App() {
   const [showAccount, setShowAccount] = useState(false);
   const [settings, setSettings] = useState<AiSettings>({ provider: 'deepseek', baseUrl: providerPresets.deepseek.baseUrl, model: 'deepseek-chat', apiKey: '', memoryEnabled: false, memory: '' });
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
   const hasMessages = messages.length > 0;
   const backendReady = backendStatus.state === 'ready';
   const canSend = question.trim().length > 0 && !isLoading && backendReady;
-  const modelOptions = providerPresets[settings.provider].models;
+  const modelOptions = availableModels.length ? availableModels : providerPresets[settings.provider].models;
   const themeLabel = useMemo(() => theme === 'light' ? '切换到深色主题' : '切换到浅色主题', [theme]);
 
   useEffect(() => {
@@ -43,6 +44,19 @@ export function App() {
     const unsubscribe = window.electronAPI.onBackendStatus((status) => setBackendStatus(status));
     return () => { active = false; unsubscribe(); };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadModels = async () => {
+      const fetched = await window.electronAPI?.listAiModels?.(settings);
+      if (active && fetched?.length) {
+        setAvailableModels(fetched);
+        if (!fetched.includes(settings.model)) setSettings((current) => ({ ...current, model: fetched[0] }));
+      }
+    };
+    void loadModels();
+    return () => { active = false; };
+  }, [settings.provider, settings.baseUrl, settings.apiKey]);
 
   async function restartBackend() {
     if (!window.electronAPI) return;
