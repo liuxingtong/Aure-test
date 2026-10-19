@@ -2,14 +2,20 @@ package com.example.qa.tools;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
-import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MarkdownDocumentTool implements AiTool {
+    private final MarkdownOutputWriter writer;
+
+    public MarkdownDocumentTool() { this(new MarkdownOutputWriter((java.nio.file.Path) null)); }
+    public MarkdownDocumentTool(MarkdownOutputWriter writer) { this.writer = writer; }
+
     @Override public String name() { return "generate_markdown"; }
-    @Override public String description() { return "根据标题和内容生成规范 Markdown 文档，不写入文件"; }
-    @Override public String execute(JsonNode arguments) {
+    @Override public String description() { return "根据标题和内容生成规范 Markdown 文档，并自动落盘到 ~/Documents/yunhe/ 下。返回的 saved_path 字段包含绝对路径，前端可以提供 '打开文件' 链接。"; }
+
+    @Override
+    public String execute(JsonNode arguments) {
         var title = arguments.path("title").asText("").trim();
         if (title.isBlank()) throw new IllegalArgumentException("title 不能为空");
         var sections = new ArrayList<String>();
@@ -30,7 +36,10 @@ public class MarkdownDocumentTool implements AiTool {
         if (arguments.has("table")) sections.add(renderTable(arguments.path("table")));
         if (arguments.has("code")) sections.add(renderCode(arguments.path("code")));
         if (sections.isEmpty()) throw new IllegalArgumentException("content、list、table 或 code 至少提供一项");
-        return "# " + title + "\n\n" + String.join("\n\n", sections) + "\n";
+
+        var markdown = "# " + title + "\n\n" + String.join("\n\n", sections) + "\n";
+        var result = writer.write(title, markdown, arguments);
+        return "已保存到 [" + result.path().getFileName() + "](file://" + result.path() + ")\n\n" + result.content() + "\n\nsaved_path: " + result.path();
     }
 
     private static String renderTable(JsonNode table) {
@@ -62,7 +71,7 @@ public class MarkdownDocumentTool implements AiTool {
         return "```" + language + "\n" + code.path("content").asText() + "\n```";
     }
 
-    private static List<String> strings(JsonNode node, String field) {
+    private static java.util.List<String> strings(JsonNode node, String field) {
         var values = new ArrayList<String>();
         for (var item : node) {
             if (!item.isTextual() || item.asText().trim().isBlank()) throw new IllegalArgumentException(field + " 必须是非空字符串数组");
@@ -71,6 +80,6 @@ public class MarkdownDocumentTool implements AiTool {
         return values;
     }
 
-    private static String row(List<String> cells) { return "| " + String.join(" | ", cells) + " |"; }
+    private static String row(java.util.List<String> cells) { return "| " + String.join(" | ", cells) + " |"; }
     private static String escape(String value) { return value.replace("|", "\\|").replace("\n", " "); }
 }
