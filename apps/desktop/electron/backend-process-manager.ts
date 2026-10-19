@@ -61,7 +61,7 @@ export class BackendProcessManager {
 
   constructor(options: BackendProcessManagerOptions) {
     this.options = { ...options, arch: options.arch ?? process.arch };
-    this.spawn = options.spawn ?? ((command, args, spawnOptions) => systemSpawn(command, args, { ...spawnOptions, stdio: ['ignore', 'pipe', 'pipe'] }));
+    this.spawn = options.spawn ?? ((command, args, spawnOptions) => systemSpawn(command, args, { ...spawnOptions, stdio: ['pipe', 'pipe', 'pipe'] }));
     this.fetch = options.fetch ?? globalThis.fetch;
     this.clock = { now: Date.now, sleep: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)), ...options.clock };
     this.portInUse = options.portInUse ?? (() => isPortInUse(BACKEND_PORT));
