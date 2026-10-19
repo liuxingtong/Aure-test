@@ -15,6 +15,7 @@ interface ElectronAPI {
   getAiSettings?(): Promise<AiSettings>;
   saveAiSettings?(settings: AiSettings): Promise<AiSettings>;
   listAiModels?(settings: AiSettings): Promise<string[]>;
+  openExternal?(url: string): Promise<void>;
   onBackendStatus(listener: (status: BackendStatus) => void): () => void;
 }
 

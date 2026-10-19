@@ -2,11 +2,11 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 960px; min-height: 640px; }
 button, textarea { font: inherit; } button { cursor: pointer; }
-.app-shell { --bg-primary:#fff; --bg-secondary:#f7f7f8; --bg-tertiary:#ececf1; --text-primary:#2f2f2f; --text-secondary:#6b6b6b; --border-color:#e5e5e5; --accent-color:#10a37f; display:flex; width:100vw; height:100vh; min-height:640px; overflow:hidden; color:var(--text-primary); background:var(--bg-primary); }
-.app-shell[data-theme="dark"] { --bg-primary:#212121; --bg-secondary:#2f2f2f; --bg-tertiary:#424242; --text-primary:#ececec; --text-secondary:#b4b4b4; --border-color:#484848; --accent-color:#19c37d; }
+.app-shell { --bg-primary:#fff; --bg-secondary:#f7f7f8; --bg-tertiary:#ececf1; --text-primary:#2f2f2f; --text-secondary:#6b6b6b; --border-color:#e5e5e5; --accent-color:#10a37f; --send-bg:#111; --send-fg:#fff; display:flex; width:100vw; height:100vh; min-height:640px; overflow:hidden; color:var(--text-primary); background:var(--bg-primary); }
+.app-shell[data-theme="dark"] { --bg-primary:#212121; --bg-secondary:#2f2f2f; --bg-tertiary:#424242; --text-primary:#ececec; --text-secondary:#b4b4b4; --border-color:#484848; --accent-color:#19c37d; --send-bg:#fff; --send-fg:#111; }
 .sidebar { display:flex; flex:0 0 260px; flex-direction:column; padding:14px 12px; background:var(--bg-secondary); border-right:1px solid var(--border-color); }
 .sidebar-header { display:flex; align-items:center; gap:10px; height:42px; padding:0 10px; font-size:14px; font-weight:600; }
-.app-mark,.welcome-mark { display:block; object-fit:contain; background:var(--accent-color); border-radius:8px; } .app-mark { width:26px; height:26px; padding:2px; }
+.app-mark,.welcome-mark { display:block; object-fit:contain; border-radius:8px; } .app-mark { width:26px; height:26px; padding:2px; }
 .new-chat-button,.sidebar-action { display:flex; align-items:center; gap:10px; width:100%; padding:10px; color:var(--text-primary); text-align:left; background:transparent; border:1px solid transparent; border-radius:8px; }
 .new-chat-button { margin-top:14px; border-color:var(--border-color); } .new-chat-button:hover,.sidebar-action:hover,.conversation-item:hover { background:var(--bg-tertiary); }
 .button-icon { width:18px; color:var(--text-secondary); text-align:center; font-size:18px; line-height:1; }
@@ -35,6 +35,6 @@ button, textarea { font: inherit; } button { cursor: pointer; }
 .composer { display:flex; align-items:flex-end; width:min(100%,800px); margin:0 auto; padding:10px 12px 10px 16px; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.06); } .composer:focus-within { border-color:var(--accent-color); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-color) 18%,transparent); }
 .composer textarea { flex:1; max-height:120px; resize:none; color:var(--text-primary); background:transparent; border:0; outline:0; line-height:1.5; } .composer textarea::placeholder { color:var(--text-secondary); }
 .composer-model { flex:0 0 auto; max-width:180px; margin:0 10px; padding:7px 8px; color:var(--text-secondary); background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:7px; font-size:12px; outline:0; } .composer-model:focus { border-color:var(--accent-color); color:var(--text-primary); }
-.send-button { display:grid; flex:0 0 30px; place-items:center; width:30px; height:30px; color:#fff; background:var(--accent-color); border:0; border-radius:8px; font-size:19px; line-height:1; } .send-button:disabled { cursor:default; opacity:.4; }
+.send-button { display:grid; flex:0 0 30px; place-items:center; width:30px; height:30px; color:var(--send-fg); background:var(--send-bg); border:0; border-radius:8px; font-size:19px; line-height:1; } .send-button:disabled { cursor:default; opacity:.4; }
 .composer-hint { width:min(100%,800px); margin:8px auto 0; color:var(--text-secondary); font-size:11px; text-align:center; }
 @media (max-width:800px) { .sidebar { flex-basis:220px; } .chat-header { padding:0 18px; } .composer-wrap { padding-right:18px; padding-left:18px; } }

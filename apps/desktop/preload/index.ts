@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAiSettings: () => ipcRenderer.invoke('settings:get-ai'),
   saveAiSettings: (settings: AiSettings) => ipcRenderer.invoke('settings:save-ai', settings),
   listAiModels: (settings: AiSettings) => ipcRenderer.invoke('settings:list-models', settings),
+  openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url),
   onBackendStatus: (listener: (status: BackendStatus) => void) => {
     const wrapped = (_event: Electron.IpcRendererEvent, status: BackendStatus) => listener(status);
     ipcRenderer.on('backend:status', wrapped);

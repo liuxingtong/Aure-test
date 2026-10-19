@@ -14,4 +14,12 @@ class ToolRegistryTest {
         assertThat(registry.execute("calculate", new ObjectMapper().readTree("{\"expression\":\"1+2\"}")))
                 .isEqualTo("3");
     }
+
+    @Test
+    void createsExternalNewsSearchLinks() throws Exception {
+        var tool = new SearchLatestNewsTool();
+
+        assertThat(tool.execute(new ObjectMapper().readTree("{\"query\":\"人工智能\"}")))
+                .contains("https://news.google.com/search?q=", "https://www.bing.com/news/search?q=");
+    }
 }
