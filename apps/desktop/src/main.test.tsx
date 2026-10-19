@@ -120,4 +120,19 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: '重新尝试' }));
     expect(screen.getByRole('button', { name: '发送消息' })).not.toBeDisabled();
   });
+
+  it('opens http news links through the Electron shell', async () => {
+    const user = userEvent.setup();
+    window.electronAPI = {
+      listHistory: vi.fn().mockResolvedValue([]), saveHistory: vi.fn().mockResolvedValue(undefined), deleteHistory: vi.fn().mockResolvedValue(undefined), clearHistory: vi.fn().mockResolvedValue(undefined),
+      askQuestion: vi.fn().mockResolvedValue({ success: true, data: { messageId: 'answer-link', answer: '[新闻原文](http://example.com/news)' } }),
+      getVersion: vi.fn(), checkBackend: vi.fn(), getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }), onBackendStatus: vi.fn().mockReturnValue(() => undefined), restartBackend: vi.fn(), openExternal: vi.fn().mockResolvedValue(undefined)
+    };
+    render(<App />);
+    await screen.findByText('后端已就绪');
+    await user.type(screen.getByLabelText('问题输入框'), '搜索新闻');
+    await user.click(screen.getByRole('button', { name: '发送消息' }));
+    await user.click(await screen.findByRole('link', { name: '新闻原文' }));
+    expect(window.electronAPI.openExternal).toHaveBeenCalledWith('http://example.com/news');
+  });
 });

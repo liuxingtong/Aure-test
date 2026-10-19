@@ -59,7 +59,7 @@ export function registerIpcHandlers(
   });
   ipcMain.handle('shell:open-external', async (_event, url: string): Promise<void> => {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'https:') throw new Error('仅允许打开 HTTPS 外部链接');
+    if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('仅允许打开 HTTP/HTTPS 外部链接');
     await shell.openExternal(parsed.toString());
   });
 }

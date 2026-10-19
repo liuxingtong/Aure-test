@@ -39,21 +39,32 @@ public class SearchLatestNewsTool implements AiTool {
 
     private String fetchResults(String query, String encoded) {
         try {
-            var request = HttpRequest.newBuilder(URI.create("https://www.bing.com/news/search?q=" + encoded + "&format=rss"))
+            var request = HttpRequest.newBuilder(URI.create("https://news.google.com/rss/search?q=" + encoded + "&hl=zh-CN&gl=CN&ceid=CN:zh-Hans"))
                     .timeout(Duration.ofSeconds(12)).header("User-Agent", "yunhe/0.1").GET().build();
             var xml = httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
-            var items = new ArrayList<String>();
+            return parseRss(xml);
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    String parseRss(String xml) {
+        var items = new ArrayList<String>();
+        if (xml == null || xml.isBlank()) return "";
             Matcher matcher = ITEM.matcher(xml);
             while (matcher.find() && items.size() < 5) {
                 var item = matcher.group(1);
                 var title = first(TITLE, item);
                 var link = first(LINK, item);
-                if (!title.isBlank() && !link.isBlank()) items.add("- [" + clean(title) + "](" + clean(link) + ")");
+                var source = first(Pattern.compile("<source[^>]*>(.*?)</source>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE), item);
+                var published = first(Pattern.compile("<pubDate>(.*?)</pubDate>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE), item);
+                if (!title.isBlank() && !link.isBlank()) {
+                    var metadata = source.isBlank() ? "" : " · " + clean(source);
+                    if (!published.isBlank()) metadata += " · " + clean(published);
+                    items.add("- [" + clean(title) + "](" + clean(link) + ")" + metadata);
+                }
             }
-            return items.isEmpty() ? "" : "Bing News 实时结果（最多 5 条）：\n\n" + String.join("\n", items);
-        } catch (Exception ignored) {
-            return "";
-        }
+            return items.isEmpty() ? "" : "Google News 实时结果（最多 5 条）：\n\n" + String.join("\n", items);
     }
 
     private static String first(Pattern pattern, String input) {
