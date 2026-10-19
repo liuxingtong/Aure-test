@@ -70,6 +70,35 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: '发送消息' })).toBeDisabled();
   });
 
+  it('starts a fresh conversation instead of selecting persisted history', async () => {
+    window.electronAPI = {
+      listHistory: vi.fn().mockResolvedValue([{
+        id: 'local-conversation',
+        title: '旧会话',
+        messages: [{ id: 'old-message', role: 'user', content: '旧内容', createdAt: '2026-01-01T00:00:00.000Z' }],
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      }]),
+      saveHistory: vi.fn().mockResolvedValue(undefined),
+      deleteHistory: vi.fn().mockResolvedValue(undefined),
+      clearHistory: vi.fn().mockResolvedValue(undefined),
+      askQuestion: vi.fn(),
+      getVersion: vi.fn(),
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined),
+      restartBackend: vi.fn()
+    };
+
+    render(<App />);
+
+    expect(await screen.findByText('旧会话')).toBeInTheDocument();
+    expect(screen.getByText('有什么可以帮忙的？')).toBeInTheDocument();
+    expect(screen.getByText('新对话')).toBeInTheDocument();
+    expect(document.querySelector('.conversation-item-wrap.active')).toBeNull();
+    expect(screen.queryByText('旧内容')).not.toBeInTheDocument();
+  });
+
   it('submits a question and renders markdown answer', async () => {
     const user = userEvent.setup();
     window.electronAPI = {

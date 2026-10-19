@@ -18,6 +18,10 @@ const MAX_HISTORY_MESSAGES = 60;
 const MAX_HISTORY_CONTENT = 18_000;
 const MAX_QUESTION_LENGTH = 10_000;
 
+function newConversationId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 /** react-markdown 默认会清空 file: 链接；仅放行生成文档的 file://，其余仍走安全白名单。 */
 function markdownUrlTransform(url: string): string {
   return /^file:\/\//i.test(url) ? url : defaultUrlTransform(url);
@@ -106,7 +110,7 @@ export function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastFailedQuestion, setLastFailedQuestion] = useState('');
   const [backendStatus, setBackendStatus] = useState<BackendStatus>(() => window.electronAPI ? { state: 'starting', message: '正在启动后端服务…' } : { state: 'ready' });
-  const [conversationId, setConversationId] = useState('local-conversation');
+  const [conversationId, setConversationId] = useState<string>(() => newConversationId());
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showArchived, setShowArchived] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -187,7 +191,7 @@ export function App() {
   }
 
   function resetConversation() {
-    setConversationId(crypto.randomUUID());
+    setConversationId(newConversationId());
     setMessages([]);
     setPendingAttachments([]);
     setErrorMessage(null);
