@@ -74,8 +74,10 @@ export function registerIpcHandlers(
     const options = {
       properties: ['openFile'],
       filters: [{ name: '文档', extensions: ['md', 'txt', 'json'] }]
-    } as const;
-    const result = window ? await dialog.showOpenDialog(window, options) : await dialog.showOpenDialog(options);
+    };
+    const result = window
+      ? await dialog.showOpenDialog(window, options)
+      : await dialog.showOpenDialog(options);
     if (result.canceled || result.filePaths.length === 0) return null;
     const filePath = result.filePaths[0];
     try {
