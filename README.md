@@ -30,11 +30,15 @@ npm run verify:startup:mac
 npm run verify:startup:windows
 npm --workspace apps/desktop run test
 npm --workspace apps/desktop run package:dir
+npm --workspace apps/desktop run package:win
+npm --workspace apps/desktop run package:win:installer
 ```
 
-正式版会把 Spring Boot JAR 和平台 Java Runtime 放进应用资源，用户双击应用后由 Electron 自动启动后端并等待健康检查。macOS arm64 打包前设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，然后执行 `./scripts/prepare-backend-runtime.sh`；资源校验命令为 `node scripts/verify-runtime-assets.cjs --platform darwin --arch arm64`。`package:dir` 生成未签名的 macOS arm64 目录包到 `apps/desktop/release/mac-arm64`。正式发布还需要配置 Apple Developer 签名和公证。
+正式版会把 Spring Boot JAR 和平台 Java Runtime 放进应用资源，用户双击应用后由 Electron 自动启动后端并等待健康检查。macOS arm64 打包前设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime/JDK，然后执行 `./scripts/prepare-backend-runtime.sh`；脚本在 JDK 环境下会用 `jlink` 生成只含后端所需模块的最小 JRE（约 57 MB），避免把完整 JDK 的 jmods/demo/man/include 打进应用。资源校验命令为 `node scripts/verify-runtime-assets.cjs --platform darwin --arch arm64`。`package:dir` 生成未签名的 macOS arm64 目录包到 `apps/desktop/release/mac-arm64`。正式发布还需要配置 Apple Developer 签名和公证。
 
-Windows 迁移：将源码包复制到 Windows 后，在 PowerShell 设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，执行 `.\scripts\build-windows.ps1`。构建脚本会准备后端和 Runtime；直接双击 `apps/desktop/release/win-unpacked/yunhe.exe` 即可一键启动全部服务。Windows 正式发布还需要代码签名，并在目标机器检查杀毒软件误报。
+Windows 迁移：将源码包复制到 Windows 后，在 PowerShell 设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，执行 `.\scripts\build-windows.ps1`。构建脚本会准备后端和 Runtime；直接双击 `apps/desktop/release/win-unpacked/yunhe.exe` 即可一键启动全部服务。`package:win:installer` 生成 NSIS 安装包到 `apps/desktop/release/yunhe-0.1.0-setup-x64.exe`。Windows 正式发布还需要代码签名，并在目标机器检查杀毒软件误报。
+
+应用体积主要来自三层正常依赖：Electron 运行时（约 250 MB）、内置 Java Runtime（最小 JRE 约 57 MB，Windows JRE 约 126 MB）和 Spring Boot 可执行 JAR（约 22 MB）。`files` 已排除 `node_modules` 和 sourcemap，渲染进程由 Vite 打包进 `dist`，不会把开发依赖或缓存带进安装包。
 
 ## 目录结构
 

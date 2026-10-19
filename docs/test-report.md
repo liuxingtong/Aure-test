@@ -12,6 +12,8 @@
 - Provider 401/403 映射为 `AI_AUTH_ERROR`，对话界面显示“API Key 无效或没有访问权限，请在账户设置中检查。”，不再统一显示“服务暂时不可用”；429/5xx/连接失败也分别映射。
 - 账户弹窗主色改为深灰色；已保存的 API Key 不回显，但显示“已保存，留空保持不变”的提示。
 - 移除账户设置中的“启用记忆”入口及请求里的记忆上下文注入。
+- 打包体积：Mac 目录包 639 MB → 344 MB（完整 JDK 330 MB → jlink 最小 JRE 61 MB，app.asar 28 MB → 2.7 MB）；Mac zip 163 MB；Windows 目录包 451 MB、便携 zip 178 MB、NSIS 安装包 128 MB。
+- Windows x64 已使用 Adoptium JRE 17 x64 准备 `runtime/jre/win-x64`，`yunhe.exe` 为 PE32+ x86-64，安装包已生成；Windows 实机启动仍需在 Windows 环境完成最终验证。
 - `ToolCallParser` 增加对模型漏写 `tool_calls` 数组结尾 `]` 的容错恢复，并新增回归测试；无法恢复时返回 `INVALID_TOOL_ARGUMENTS`，不再把原始 JSON 当答案显示。
 - 已重新生成 `release/mac-arm64/yunhe.app`，后端 JAR 与 `runtime/backend/qa-backend-0.1.0.jar` 哈希一致。
 - 已知环境限制：当前 DSH 外层 sandbox 下 Electron 的 OS sandbox 无法启动，`verify:ipc` 需在普通终端运行；应用本体已通过 `open` 启动并健康检查通过。

@@ -21,10 +21,17 @@ mvn -q -f "$ROOT/apps/backend/pom.xml" -DskipTests package
 
 mkdir -p "$ROOT/runtime/backend" "$ROOT/runtime/jre/mac-arm64"
 cp "$ROOT/apps/backend/target/qa-backend-0.1.0.jar" "$ROOT/runtime/backend/qa-backend-0.1.0.jar"
-if [[ "$JRE_SOURCE" != "$ROOT/runtime/jre/mac-arm64" ]]; then
+
+# 只保留后端实际需要的 JDK 模块，避免把完整 JDK 的 jmods/demo/man/include 打进应用。
+MODULES="java.base,java.logging,java.naming,java.management,java.xml,java.instrument,jdk.unsupported,java.net.http,jdk.crypto.ec,jdk.zipfs,jdk.localedata,java.desktop,java.sql,jdk.naming.dns,jdk.charsets,java.security.jgss,java.security.sasl"
+if [[ "$JRE_SOURCE" != "$ROOT/runtime/jre/mac-arm64" && -x "$JRE_SOURCE/bin/jlink" ]]; then
+  rm -rf "$ROOT/runtime/jre/mac-arm64"
+  "$JRE_SOURCE/bin/jlink" --add-modules "$MODULES" --strip-debug --no-header-files --no-man-pages --compress=2 \
+    --output "$ROOT/runtime/jre/mac-arm64"
+elif [[ "$JRE_SOURCE" != "$ROOT/runtime/jre/mac-arm64" ]]; then
   rm -rf "$ROOT/runtime/jre/mac-arm64"
   cp -R "$JRE_SOURCE" "$ROOT/runtime/jre/mac-arm64"
 fi
 chmod +x "$ROOT/runtime/jre/mac-arm64/bin/java"
 printf '{"platform":"darwin","arch":"arm64"}\n' > "$ROOT/runtime/jre/mac-arm64/runtime.json"
-echo "Prepared macOS arm64 backend and Java runtime under $ROOT/runtime"
+echo "Prepared macOS arm64 backend and minimal Java runtime under $ROOT/runtime"

@@ -197,7 +197,7 @@
 - [x] 开发环境支持自动启动 Spring Boot
 - [x] 正式版纳入 Spring Boot 可执行 JAR
 - [x] Mac arm64 纳入匹配的 Java Runtime
-- [ ] Windows x64 纳入匹配的 Java Runtime（需 Windows 实机准备并验证）
+- [x] Windows x64 纳入匹配的 Java Runtime（Adoptium JRE 17 x64）
 - [x] 增加 `/api/v1/health` 启动轮询，启动超时固定为 30 秒
 - [x] 增加 8080 端口占用检测和明确错误
 - [x] 增加单实例锁和重复后端启动保护
@@ -211,5 +211,5 @@
 - [x] 增加 Windows 杀毒误报和签名发布检查项
 - [x] 增加包体积和启动耗时记录
 - [x] 验证 Mac 正式版双击启动、提问和退出清理
-- [ ] 验证 Windows x64 正式版双击启动、提问和退出清理（需 Windows 实机）
+- [ ] 验证 Windows x64 正式版双击启动、提问和退出清理（安装包已生成，需 Windows 实机运行）
 - [x] 更新 README、架构文档和测试报告

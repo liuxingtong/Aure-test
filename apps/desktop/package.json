@@ -13,6 +13,7 @@
     "test": "vitest run",
     "package:dir": "npm run build && npm run build:electron && electron-builder --dir",
     "package:win": "npm run build && npm run build:electron && electron-builder --win dir --x64 --publish never",
+    "package:win:installer": "npm run build && npm run build:electron && electron-builder --win nsis --x64 --publish never",
     "make": "npm run build && npm run build:electron && electron-builder --mac zip"
   },
   "dependencies": {
@@ -49,7 +50,9 @@
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/**/*",
+      "!**/*.map"
     ],
     "mac": {
       "target": [{ "target": "dmg", "arch": ["arm64"] }],
@@ -61,11 +64,16 @@
     },
     "win": {
       "target": [{ "target": "dir", "arch": ["x64"] }],
-      "artifactName": "qa-desktop-${version}-${arch}.${ext}",
+      "artifactName": "yunhe-${version}-${arch}.${ext}",
       "extraResources": [
         { "from": "../../runtime/backend", "to": "backend" },
         { "from": "../../runtime/jre/win-x64", "to": "jre/win-x64" }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "yunhe-${version}-setup-${arch}.${ext}"
     }
   }
 }
