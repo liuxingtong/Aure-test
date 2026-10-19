@@ -17,10 +17,13 @@
   "dependencies": {
     "@qa-desktop/shared-types": "*",
     "@vitejs/plugin-react": "^4.3.4",
+    "katex": "^0.16.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.0",
-    "remark-gfm": "^4.0.0"
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.0",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",

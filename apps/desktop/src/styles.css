@@ -52,3 +52,6 @@ button, textarea { font: inherit; } button { cursor: pointer; }
 .thinking-body p:last-child { margin-bottom:0; }
 .thinking-body pre { overflow:auto; padding:10px; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:6px; font-size:12px; }
 .thinking-body code { padding:1px 4px; background:var(--bg-tertiary); border-radius:3px; font-size:.9em; }
+/* KaTeX tweaks: keep formulas inline with surrounding text */
+.message-content .katex, .thinking-body .katex { font-size:1.05em; }
+.message-content .katex-display, .thinking-body .katex-display { overflow-x:auto; padding:8px 0; margin:8px 0; }

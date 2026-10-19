@@ -2,8 +2,11 @@ import { StrictMode, FormEvent, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import type { AiProvider, AiSettings, ChatMessage as SharedChatMessage, Conversation } from '@qa-desktop/shared-types';
 import './styles.css';
+import 'katex/dist/katex.min.css';
 import yunheMark from './assets/yunhe-mark.png';
 
 type Theme = 'light' | 'dark';
@@ -25,7 +28,7 @@ function ThinkingBlock({ thinking }: { thinking: string }) {
       </button>
       {open && (
         <div className="thinking-body">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{thinking}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>{thinking}</ReactMarkdown>
         </div>
       )}
     </div>
@@ -168,7 +171,7 @@ export function App() {
         <header className="chat-header"><span className="chat-title">{conversations.find((conversation) => conversation.id === conversationId)?.title || '新对话'}</span><div className="header-actions"><button className="icon-button" type="button" aria-label={themeLabel} title={themeLabel} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? '☾' : '☀'}</button><span className={`connection-state ${backendReady ? 'ready' : 'not-ready'}`}><span className="status-dot" />{backendReady ? '后端已就绪' : backendStatus.state === 'error' ? '后端启动失败' : '正在连接后端'}</span></div></header>
         <section className={`message-area ${hasMessages ? 'has-messages' : ''}`} aria-live="polite">
           {!hasMessages && !isLoading ? <div className="welcome-state"><img className="welcome-mark" src={yunheMark} alt="yunhe" /><h1>有什么可以帮忙的？</h1><p>输入问题，开始一段新的对话。</p></div> : <div className="message-list">
-            {messages.map((message) => <article className={`message-row ${message.role}`} key={message.id}><div className="message-avatar" aria-hidden="true">{message.role === 'user' ? '你' : <img src={yunheMark} alt="yunhe" />}</div><div className="message-content">{message.role === 'assistant' ? <><ThinkingBlock thinking={message.thinking ?? ''} /><ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children, ...props }) => <a {...props} href={href} onClick={(event) => { if (href && /^(https?):$/i.test(new URL(href).protocol)) { event.preventDefault(); void window.electronAPI?.openExternal?.(href); } }}>{children}</a> }}>{message.content}</ReactMarkdown></> : <p>{message.content}</p>}</div></article>)}
+            {messages.map((message) => <article className={`message-row ${message.role}`} key={message.id}><div className="message-avatar" aria-hidden="true">{message.role === 'user' ? '你' : <img src={yunheMark} alt="yunhe" />}</div><div className="message-content">{message.role === 'assistant' ? <><ThinkingBlock thinking={message.thinking ?? ''} /><ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{ a: ({ href, children, ...props }) => <a {...props} href={href} onClick={(event) => { if (href && /^(https?):$/i.test(new URL(href).protocol)) { event.preventDefault(); void window.electronAPI?.openExternal?.(href); } }}>{children}</a> }}>{message.content}</ReactMarkdown></> : <p>{message.content}</p>}</div></article>)}
             {isLoading && <div className="message-row assistant"><div className="message-avatar" aria-hidden="true"><img src={yunheMark} alt="yunhe" /></div><div className="message-content loading-dots" aria-label="正在生成回答"><span /><span /><span /></div></div>}
             {errorMessage && <div className="error-state" role="alert"><span>{errorMessage}</span><button type="button" onClick={() => { setMessages((current) => { const last = current[current.length - 1]; return last?.role === 'user' && last.content === lastFailedQuestion ? current.slice(0, -1) : current; }); setQuestion(lastFailedQuestion); setErrorMessage(null); }} aria-label="重新尝试">重新尝试</button></div>}
           </div>}
