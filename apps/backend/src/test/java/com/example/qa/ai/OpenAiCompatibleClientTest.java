@@ -61,7 +61,7 @@ class OpenAiCompatibleClientTest {
             }
             respond(exchange, "{\"choices\":[]}");
         });
-        var properties = new AiProperties(true, "http://127.0.0.1:" + server.getAddress().getPort(), "test-key", "test-model", Duration.ofMillis(50));
+        var properties = new AiProperties(true, "openai-compatible", "http://127.0.0.1:" + server.getAddress().getPort(), "test-key", "test-model", Duration.ofMillis(50));
         var client = new OpenAiCompatibleClient(RestClient.builder(), properties);
 
         assertThatThrownBy(() -> client.chat(List.of(), "问题"))
@@ -69,7 +69,7 @@ class OpenAiCompatibleClientTest {
     }
 
     private AiProperties properties() {
-        return new AiProperties(true, "http://127.0.0.1:" + server.getAddress().getPort(), "test-key", "test-model", Duration.ofSeconds(2));
+        return new AiProperties(true, "openai-compatible", "http://127.0.0.1:" + server.getAddress().getPort(), "test-key", "test-model", Duration.ofSeconds(2));
     }
 
     private static void respond(HttpExchange exchange, String body) throws IOException {
