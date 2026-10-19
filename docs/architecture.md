@@ -26,7 +26,7 @@ Spring Boot REST API
           └─ OpenAiCompatibleProviderAdapter (Chat Completions)
 ```
 
-`ProviderAdapter` 是后端 AI 协议边界。`AI_PROVIDER` 负责选择适配器，统一输入历史消息与问题、输出规范化 Markdown；新增 Responses API、Anthropic Messages API 或 Ollama 原生协议时，只需增加适配器并注册 provider，不改变工具调用、缓存、记忆上下文和 Electron 重启链路。
+`ProviderAdapter` 是后端 AI 协议边界。`AI_PROVIDER` 负责选择适配器，统一输入历史消息与问题、输出规范化 Markdown；新增 Responses API、Anthropic Messages API 或 Ollama 原生协议时，只需增加适配器并注册 provider，不改变工具调用、缓存、会话上下文和 Electron 重启链路。
 
 Electron Renderer 不接触 Node.js 或 API Key。API Key 只在 Spring Boot 进程环境变量中读取，日志过滤问题内容、答案和密钥。会话历史存储在 Electron 用户数据目录的 `conversations.json`。
 

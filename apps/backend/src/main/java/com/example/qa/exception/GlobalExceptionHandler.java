@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.example.qa.tools.ToolException;
+import com.example.qa.ai.ProviderHttpException;
+import org.springframework.web.client.ResourceAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,33 @@ public class GlobalExceptionHandler {
     public ResponseEntity<QuestionResponse> tool(ToolException exception) {
         var status = exception.code().equals("DOCUMENT_TOO_LARGE") ? HttpStatus.PAYLOAD_TOO_LARGE : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(status).body(QuestionResponse.failure(exception.code(), exception.getMessage(), exception.retryable()));
+    }
+
+    @ExceptionHandler(ProviderHttpException.class)
+    public ResponseEntity<QuestionResponse> provider(ProviderHttpException exception) {
+        var status = exception.status();
+        var code = switch (status) {
+            case 401, 403 -> "AI_AUTH_ERROR";
+            case 404 -> "AI_ENDPOINT_NOT_FOUND";
+            case 429 -> "AI_RATE_LIMITED";
+            case 400, 422 -> "AI_REQUEST_INVALID";
+            default -> status >= 500 ? "AI_SERVICE_UNAVAILABLE" : "AI_SERVICE_ERROR";
+        };
+        var httpStatus = switch (status) {
+            case 401, 403 -> HttpStatus.UNAUTHORIZED;
+            case 429 -> HttpStatus.TOO_MANY_REQUESTS;
+            case 400, 404, 422 -> HttpStatus.BAD_REQUEST;
+            default -> status >= 500 ? HttpStatus.BAD_GATEWAY : HttpStatus.BAD_REQUEST;
+        };
+        log.warn("provider error status={} code={} message={}", status, code, exception.getMessage());
+        return ResponseEntity.status(httpStatus).body(QuestionResponse.failure(code, exception.getMessage(), exception.retryable()));
+    }
+
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<QuestionResponse> connection(ResourceAccessException exception) {
+        log.warn("AI connection failed: {}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(QuestionResponse.failure("AI_CONNECTION_ERROR", "无法连接 AI 服务，请检查网络或接口地址。", true));
     }
 
     @ExceptionHandler(Exception.class)

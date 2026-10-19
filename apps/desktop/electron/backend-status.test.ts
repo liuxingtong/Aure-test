@@ -38,7 +38,7 @@ describe('BackendStatusBroadcaster', () => {
 
 describe('publicAiSettings', () => {
   it('never exposes the stored API key to the renderer', () => {
-    expect(publicAiSettings({ provider: 'deepseek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat', apiKey: 'secret', memoryEnabled: false, memory: '' }))
+    expect(publicAiSettings({ provider: 'deepseek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat', apiKey: 'secret' }))
       .toMatchObject({ apiKey: '', apiKeyConfigured: true });
   });
 });

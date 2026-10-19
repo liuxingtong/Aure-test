@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.qa.model.ChatMessage;
+import com.example.qa.monitoring.TraceWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -66,6 +68,25 @@ class OpenAiCompatibleClientTest {
 
         assertThatThrownBy(() -> client.chat(List.of(), "问题"))
                 .isInstanceOf(org.springframework.web.client.RestClientException.class);
+    }
+
+    @Test
+    void mapsUnauthorizedProviderResponseToProviderHttpException() {
+        server.createContext("/chat/completions", exchange -> {
+            var bytes = "{\"error\":{\"message\":\"Authentication Fails\"}}".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(401, bytes.length);
+            try (var output = exchange.getResponseBody()) {
+                output.write(bytes);
+            }
+        });
+        var adapter = new OpenAiCompatibleProviderAdapter(
+                RestClient.builder(), properties(), new ObjectMapper(),
+                new TraceWriter((java.nio.file.Path) null, new ObjectMapper()));
+
+        assertThatThrownBy(() -> adapter.chatWithThinking(List.of(), "问题", null))
+                .isInstanceOf(ProviderHttpException.class)
+                .extracting("status").isEqualTo(401);
     }
 
     private AiProperties properties() {

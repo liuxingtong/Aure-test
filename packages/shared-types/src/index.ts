@@ -33,8 +33,6 @@ export interface AiSettings {
   baseUrl: string;
   model: string;
   apiKey: string;
-  memoryEnabled: boolean;
-  memory: string;
   apiKeyConfigured?: boolean;
 }
 

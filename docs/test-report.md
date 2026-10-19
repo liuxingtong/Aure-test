@@ -4,11 +4,14 @@
 
 ## 2026-10-19 修复复验
 
-- 后端 `mvn test`：46 个用例全部通过。
-- 前端 `vitest run`：23 个用例全部通过；`typecheck` 和 `build:desktop` 通过。
+- 后端 `mvn test`：50 个用例全部通过。
+- 前端 `vitest run`：25 个用例全部通过；`typecheck` 和 `build:desktop` 通过。
 - 真实 DeepSeek 链路验证：问题“能否写一条数学公式并调用工具计算”返回 `success: true`、`toolCalls: ["calculate"]` 和最终 Markdown 答案，不再出现 `missing field tool_call_id` 的 422。
 - 使用假 Chat Completions 服务验证工具回填顺序：第二次请求为 `system/assistant/user/user`，没有非法的 `role: tool`。
 - 启动时不再复用固定 id `local-conversation`，改为每次生成新的会话 id；历史记录仍显示在侧栏，但默认不选中任何旧会话，主区域显示“新对话”空状态。
+- Provider 401/403 映射为 `AI_AUTH_ERROR`，对话界面显示“API Key 无效或没有访问权限，请在账户设置中检查。”，不再统一显示“服务暂时不可用”；429/5xx/连接失败也分别映射。
+- 账户弹窗主色改为深灰色；已保存的 API Key 不回显，但显示“已保存，留空保持不变”的提示。
+- 移除账户设置中的“启用记忆”入口及请求里的记忆上下文注入。
 - `ToolCallParser` 增加对模型漏写 `tool_calls` 数组结尾 `]` 的容错恢复，并新增回归测试；无法恢复时返回 `INVALID_TOOL_ARGUMENTS`，不再把原始 JSON 当答案显示。
 - 已重新生成 `release/mac-arm64/yunhe.app`，后端 JAR 与 `runtime/backend/qa-backend-0.1.0.jar` 哈希一致。
 - 已知环境限制：当前 DSH 外层 sandbox 下 Electron 的 OS sandbox 无法启动，`verify:ipc` 需在普通终端运行；应用本体已通过 `open` 启动并健康检查通过。

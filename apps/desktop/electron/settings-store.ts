@@ -6,9 +6,7 @@ export const defaultAiSettings: AiSettings = {
   provider: 'deepseek',
   baseUrl: 'https://api.deepseek.com',
   model: 'deepseek-chat',
-  apiKey: '',
-  memoryEnabled: false,
-  memory: ''
+  apiKey: ''
 };
 
 type StoredSettings = Omit<AiSettings, 'apiKey'> & { apiKey: string };

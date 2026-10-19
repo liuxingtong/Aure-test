@@ -153,6 +153,54 @@ describe('App', () => {
     expect(window.electronAPI?.askQuestion).toHaveBeenLastCalledWith(expect.objectContaining({ history: [] }));
   });
 
+  it('shows an actionable message when the API key is invalid', async () => {
+    const user = userEvent.setup();
+    const message = 'API Key 无效或没有访问权限，请在账户设置中检查。';
+    window.electronAPI = {
+      listHistory: vi.fn().mockResolvedValue([]),
+      saveHistory: vi.fn().mockResolvedValue(undefined),
+      deleteHistory: vi.fn().mockResolvedValue(undefined),
+      clearHistory: vi.fn().mockResolvedValue(undefined),
+      askQuestion: vi.fn().mockResolvedValue({ success: false, error: { code: 'AI_AUTH_ERROR', message, retryable: false } }),
+      getVersion: vi.fn(),
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined),
+      restartBackend: vi.fn()
+    };
+
+    render(<App />);
+    await screen.findByText('后端已就绪');
+    await user.type(screen.getByLabelText('问题输入框'), '测试错误 Key');
+    await user.click(screen.getByRole('button', { name: '发送消息' }));
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
+  });
+
+  it('shows that a saved API key is kept without re-displaying it', async () => {
+    const user = userEvent.setup();
+    window.electronAPI = {
+      listHistory: vi.fn().mockResolvedValue([]),
+      saveHistory: vi.fn().mockResolvedValue(undefined),
+      deleteHistory: vi.fn().mockResolvedValue(undefined),
+      clearHistory: vi.fn().mockResolvedValue(undefined),
+      askQuestion: vi.fn(),
+      getVersion: vi.fn(),
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined),
+      restartBackend: vi.fn(),
+      getAiSettings: vi.fn().mockResolvedValue({ provider: 'deepseek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat', apiKey: '', apiKeyConfigured: true })
+    };
+
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: /本地账户/ }));
+
+    expect(await screen.findByPlaceholderText('已保存，留空保持不变')).toBeInTheDocument();
+    expect(screen.getByText('已保存在本机；出于安全不会回显，留空保存会保留原 Key。')).toBeInTheDocument();
+    expect(screen.queryByText('启用记忆')).not.toBeInTheDocument();
+  });
+
   it('opens http news links through the Electron shell', async () => {
     const user = userEvent.setup();
     window.electronAPI = {
