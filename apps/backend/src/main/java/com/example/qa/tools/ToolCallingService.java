@@ -31,12 +31,14 @@ public class ToolCallingService {
             var calls = parser.parse(answer);
             if (calls.isEmpty()) return answer;
             if (callsUsed + calls.size() > MAX_CALLS) throw new IllegalStateException("工具调用次数超过上限");
+            var toolResults = new ArrayList<String>();
             for (var call : calls) {
                 var result = registry.execute(call.name(), call.arguments());
                 context.add(new ChatMessage("tool-" + callsUsed, "tool", call.name() + " 结果：" + result, "now"));
+                toolResults.add(result);
                 callsUsed++;
             }
-            answer = aiClient.chat(context, question);
+            return String.join("\n\n", toolResults);
         }
     }
 

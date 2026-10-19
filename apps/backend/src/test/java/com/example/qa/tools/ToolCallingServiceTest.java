@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class ToolCallingServiceTest {
     @Test
-    void executesToolThenSendsToolResultBackToAi() {
+    void executesToolAndReturnsToolResultWithoutLeakingProtocol() {
         AiClient client = new AiClient() {
             private int calls;
             @Override public String chat(List<ChatMessage> history, String question) {
@@ -21,7 +21,7 @@ class ToolCallingServiceTest {
         };
         var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
 
-        assertThat(service.answer(List.of(), "算一下")).isEqualTo("最终答案：4");
+        assertThat(service.answer(List.of(), "算一下")).isEqualTo("4");
     }
 
     @Test
@@ -30,5 +30,13 @@ class ToolCallingServiceTest {
 
         assertThat(service.answer(List.of(), "现在可以联网搜索 AI 新闻吗"))
                 .contains("Google News", "Bing News");
+    }
+
+    @Test
+    void parsesToolCallEmbeddedInNaturalLanguageAndHidesProtocolJson() {
+        AiClient client = (history, question) -> "我来搜索一下：{\"tool_calls\":[{\"name\":\"search_latest_news\",\"arguments\":{\"query\":\"AI\"}}]}";
+        var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+
+        assertThat(service.answer(List.of(), "热门 AI 新闻")).contains("Google News").doesNotContain("tool_calls");
     }
 }

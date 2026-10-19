@@ -10,7 +10,14 @@ public class ToolCallParser {
 
     public List<ToolCall> parse(String content) {
         try {
-            var root = mapper.readTree(content);
+            var candidate = content == null ? "" : content.trim();
+            if (!candidate.startsWith("{")) {
+                var start = candidate.indexOf('{');
+                var end = candidate.lastIndexOf('}');
+                if (start < 0 || end <= start) return List.of();
+                candidate = candidate.substring(start, end + 1);
+            }
+            var root = mapper.readTree(candidate);
             var calls = root.path("tool_calls");
             if (!calls.isArray()) return List.of();
             var result = new java.util.ArrayList<ToolCall>();
