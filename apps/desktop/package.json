@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "package:dir": "npm run build && npm run build:electron && electron-builder --dir",
-    "package:win": "npm run build && npm run build:electron && electron-builder --win dir --x64 --publish never"
+    "package:win": "npm run build && npm run build:electron && electron-builder --win dir --x64 --publish never",
+    "make": "npm run build && npm run build:electron && electron-builder --mac zip"
   },
   "dependencies": {
     "@qa-desktop/shared-types": "*",
@@ -51,7 +52,7 @@
       "package.json"
     ],
     "mac": {
-      "target": [{ "target": "dir", "arch": ["arm64"] }],
+      "target": [{ "target": "dmg", "arch": ["arm64"] }],
       "category": "public.app-category.productivity",
       "extraResources": [
         { "from": "../../runtime/backend", "to": "backend" },

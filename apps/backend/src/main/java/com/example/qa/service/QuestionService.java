@@ -27,17 +27,19 @@ public class QuestionService {
 
     public QuestionResponse ask(QuestionRequest request) {
         metrics.question();
+        var hasDocuments = request.document() != null || request.documents() != null;
         var key = request.model() + "\n" + request.question().trim() + "\n" + request.history();
-        var answer = cache.get(key).orElse(null);
+        // 文档内容没有进入 key；带文档的请求直接绕过缓存，避免同一问题换附件拿到旧答案。
+        var answer = hasDocuments ? null : cache.get(key).orElse(null);
         if (answer != null) {
             metrics.cacheHit();
             log.debug("question cache hit conversationId={}", request.conversationId());
         } else {
             try {
-                log.info("processing question conversationId={} historySize={}", request.conversationId(), request.history().size());
+                log.info("processing question conversationId={} historySize={} withDocuments={}", request.conversationId(), request.history().size(), hasDocuments);
                 var result = toolCallingService.answerWithTools(request.history(), request.question(), request.model(), request.document(), request.documents());
                 answer = result.answer();
-                cache.put(key, answer);
+                if (!hasDocuments) cache.put(key, answer);
                 var toolCalls = result.toolCalls();
                 var data = new QuestionResponse.Data(request.conversationId(), UUID.randomUUID().toString(), request.question().trim(), answer, toolCalls, Instant.now(), result.thinking());
                 return QuestionResponse.success(data);

@@ -41,14 +41,23 @@ export class HistoryRepository {
 
   private async ensureLoaded(): Promise<void> {
     if (this.loaded) return;
-    this.loaded = true;
     try {
       const content = await fs.readFile(this.filePath, 'utf8');
       const conversations = JSON.parse(content) as Conversation[];
       if (Array.isArray(conversations)) conversations.forEach((conversation) => this.cache.set(conversation.id, conversation));
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== 'ENOENT') {
+        // 损坏的 conversations.json 先备份再以空历史启动，避免下一次保存把它直接覆盖。
+        console.warn('[history] failed to load conversations, backing up the corrupt file', error);
+        try {
+          await fs.rename(this.filePath, `${this.filePath}.corrupt-${Date.now()}`);
+        } catch {
+          // Ignore backup failures; still start with an empty in-memory cache.
+        }
+      }
     }
+    this.loaded = true;
   }
 
   private async flush(): Promise<void> {

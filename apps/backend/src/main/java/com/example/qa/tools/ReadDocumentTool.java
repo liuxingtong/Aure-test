@@ -15,11 +15,26 @@ public class ReadDocumentTool implements AiTool {
     public String execute(JsonNode arguments) {
         if (arguments.has("path")) throw new ToolException("INVALID_TOOL_ARGUMENTS", "path 不允许由模型提供", false);
         var documentsNode = arguments.path("documents");
+        if (!documentsNode.isArray()) {
+            // 兼容旧版单文件字段 document，避免前端重试/旧客户端失效。
+            var single = arguments.path("document");
+            if (single.isObject()) {
+                var array = com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.arrayNode();
+                array.add(single);
+                documentsNode = array;
+            }
+        }
         if (!documentsNode.isArray() || documentsNode.isEmpty()) {
-            return "DOCUMENT_SELECTION_REQUIRED：请在 Electron 文件选择器中选择文档";
+            throw new ToolException("DOCUMENT_SELECTION_REQUIRED", "请在 Electron 文件选择器中选择文档", false);
         }
         var documents = new ArrayList<JsonNode>();
         documentsNode.forEach(documents::add);
+        for (var doc : documents) {
+            var extension = doc.path("extension").asText("").toLowerCase().replaceFirst("^\\.", "");
+            if (!extension.matches("md|txt|json")) {
+                throw new ToolException("INVALID_TOOL_ARGUMENTS", "不支持的文件扩展名：" + extension, false);
+            }
+        }
         var requestedName = arguments.has("filename") ? arguments.path("filename").asText("").trim() : "";
 
         if (!requestedName.isEmpty()) {
@@ -35,9 +50,10 @@ public class ReadDocumentTool implements AiTool {
         var sb = new StringBuilder("已选文档（" + documents.size() + " 个）：\n");
         for (int i = 0; i < documents.size(); i++) {
             var doc = documents.get(i);
-            sb.append("\n[").append(i + 1).append("] ").append(doc.path("name").asText("文档"));
+            var name = doc.path("name").asText("文档");
+            sb.append("\n[").append(i + 1).append("] ").append(name);
             var ext = doc.path("extension").asText("");
-            if (!ext.isEmpty()) sb.append(".").append(ext);
+            if (!ext.isEmpty() && !name.toLowerCase().endsWith("." + ext.toLowerCase())) sb.append(".").append(ext);
             var content = doc.path("content");
             if (content.isTextual()) {
                 var snippet = content.asText();

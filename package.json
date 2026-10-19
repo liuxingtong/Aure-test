@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "workspaces": ["apps/desktop", "packages/shared-types"],
   "scripts": {
-    "dev:desktop": "npm --workspace apps/desktop run dev",
+    "dev:desktop": "bash scripts/start-dev.sh",
     "build:desktop": "npm --workspace apps/desktop run build",
     "verify:ipc": "npm --workspace apps/desktop run build:electron && electron scripts/verify-ipc.cjs",
     "verify:startup:mac": "npm --workspace apps/desktop run build:electron && node scripts/verify-startup.cjs --platform darwin --arch arm64",

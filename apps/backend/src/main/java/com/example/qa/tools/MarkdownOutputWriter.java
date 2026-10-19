@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,7 @@ public class MarkdownOutputWriter {
 
     private final Path outputDir;
 
+    @Autowired
     public MarkdownOutputWriter(@Value("${ai.markdown.output-dir:}") String configured) {
         Path resolved;
         if (configured == null || configured.isBlank()) {
@@ -31,10 +33,9 @@ public class MarkdownOutputWriter {
         }
         this.outputDir = resolved.resolve("yunhe");
     }
-
-    /** 暴露给测试用。 */
-    MarkdownOutputWriter(Path outputDir) {
-        this.outputDir = outputDir;
+    /** 暴露给测试用；与生产构造器一致，真实输出目录是 `<documentsDir>/yunhe`。 */
+    MarkdownOutputWriter(Path documentsDir) {
+        this.outputDir = documentsDir.resolve("yunhe");
     }
 
     public Result write(String title, String markdown, JsonNode arguments) {

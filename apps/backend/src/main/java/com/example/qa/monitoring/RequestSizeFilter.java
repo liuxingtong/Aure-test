@@ -19,7 +19,11 @@ public class RequestSizeFilter extends OncePerRequestFilter {
         if (request.getRequestURI().equals("/api/v1/questions")
                 && request.getMethod().equalsIgnoreCase("POST")
                 && request.getContentLengthLong() > MAX_REQUEST_BYTES) {
-            response.sendError(HttpStatus.PAYLOAD_TOO_LARGE.value(), "请求体过大");
+            // 保持与 QuestionResponse 相同的结构，Electron 才能正确显示 REQUEST_TOO_LARGE。
+            response.setStatus(HttpStatus.PAYLOAD_TOO_LARGE.value());
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"success\":false,\"data\":null,\"error\":{\"code\":\"REQUEST_TOO_LARGE\",\"message\":\"请求体过大，请缩短问题或减少附件\",\"retryable\":false}}");
             return;
         }
         chain.doFilter(request, response);

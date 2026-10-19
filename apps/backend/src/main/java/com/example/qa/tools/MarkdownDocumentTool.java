@@ -8,8 +8,9 @@ import org.springframework.stereotype.Component;
 public class MarkdownDocumentTool implements AiTool {
     private final MarkdownOutputWriter writer;
 
-    public MarkdownDocumentTool() { this(new MarkdownOutputWriter((java.nio.file.Path) null)); }
-    public MarkdownDocumentTool(MarkdownOutputWriter writer) { this.writer = writer; }
+    public MarkdownDocumentTool(MarkdownOutputWriter writer) {
+        this.writer = java.util.Objects.requireNonNull(writer, "writer");
+    }
 
     @Override public String name() { return "generate_markdown"; }
     @Override public String description() { return "根据标题和内容生成规范 Markdown 文档，并自动落盘到 ~/Documents/yunhe/ 下。返回的 saved_path 字段包含绝对路径，前端可以提供 '打开文件' 链接。"; }
@@ -39,7 +40,7 @@ public class MarkdownDocumentTool implements AiTool {
 
         var markdown = "# " + title + "\n\n" + String.join("\n\n", sections) + "\n";
         var result = writer.write(title, markdown, arguments);
-        return "已保存到 [" + result.path().getFileName() + "](file://" + result.path() + ")\n\n" + result.content() + "\n\nsaved_path: " + result.path();
+        return "已保存到 [" + result.path().getFileName() + "](" + result.path().toUri() + ")\n\n" + result.content() + "\n\nsaved_path: " + result.path();
     }
 
     private static String renderTable(JsonNode table) {

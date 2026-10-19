@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent $PSScriptRoot
-$DesktopExe = Join-Path $Root 'apps/desktop/release/win-unpacked/问答桌面应用.exe'
+$DesktopExe = Join-Path $Root 'apps/desktop/release/win-unpacked/yunhe.exe'
 
 if (-not (Test-Path $DesktopExe)) {
   throw "Windows desktop executable not found: $DesktopExe. Run .\scripts\build-windows.ps1 first."

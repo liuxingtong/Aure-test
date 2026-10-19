@@ -12,14 +12,6 @@ public class ToolRegistry {
     private final Map<String, AiTool> tools = new LinkedHashMap<>();
 
     @Autowired
-    public ToolRegistry(CalculateTool calculate, SearchLatestNewsTool news) {
-        this(calculate, news, new PlanTool(), new MarkdownDocumentTool(), new ReadDocumentTool());
-    }
-
-    public ToolRegistry(CalculateTool calculate, SearchLatestNewsTool news, PlanTool plan, MarkdownDocumentTool markdown) {
-        this(calculate, news, plan, markdown, new ReadDocumentTool());
-    }
-
     public ToolRegistry(CalculateTool calculate, SearchLatestNewsTool news, PlanTool plan, MarkdownDocumentTool markdown, ReadDocumentTool document) {
         tools.put(calculate.name(), calculate);
         tools.put(news.name(), news);

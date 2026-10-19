@@ -14,10 +14,13 @@
 复制 `.env.local.example` 为 `.env.local`，填写 API Key。`.env.local` 已被 Git 忽略，不应提交。
 
 ```bash
+npm install
 ./scripts/start-dev.sh
 ```
 
-当前配置使用 `https://api.deepseek.com` 和 `deepseek-flash`，对应 DeepSeek-V4.1-Flash；如账户模型列表不同，请以 `GET /models` 返回的 `id` 为准。
+`start-dev.sh` 会启动 Vite、Electron，并由 Electron 主进程自动启动 Spring Boot；关闭 Electron 时会一并结束后端。也可以只用 `npm run dev:desktop`，效果相同。
+
+当前配置使用 `https://api.deepseek.com`，模型以 `.env.local` 或账户设置为准；如账户模型列表不同，请以 `GET /models` 返回的 `id` 为准。
 
 ## 验证与打包
 
@@ -31,7 +34,7 @@ npm --workspace apps/desktop run package:dir
 
 正式版会把 Spring Boot JAR 和平台 Java Runtime 放进应用资源，用户双击应用后由 Electron 自动启动后端并等待健康检查。macOS arm64 打包前设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，然后执行 `./scripts/prepare-backend-runtime.sh`；资源校验命令为 `node scripts/verify-runtime-assets.cjs --platform darwin --arch arm64`。`package:dir` 生成未签名的 macOS arm64 目录包到 `apps/desktop/release/mac-arm64`。正式发布还需要配置 Apple Developer 签名和公证。
 
-Windows 迁移：将源码包复制到 Windows 后，在 PowerShell 设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，执行 `.\scripts\build-windows.ps1`。构建脚本会准备后端和 Runtime；直接双击 `apps/desktop/release/win-unpacked/问答桌面应用.exe` 即可一键启动全部服务。Windows 正式发布还需要代码签名，并在目标机器检查杀毒软件误报。
+Windows 迁移：将源码包复制到 Windows 后，在 PowerShell 设置 `QA_JRE_SOURCE` 或 `JAVA_HOME` 指向 Java 17 Runtime，执行 `.\scripts\build-windows.ps1`。构建脚本会准备后端和 Runtime；直接双击 `apps/desktop/release/win-unpacked/yunhe.exe` 即可一键启动全部服务。Windows 正式发布还需要代码签名，并在目标机器检查杀毒软件误报。
 
 ## 目录结构
 

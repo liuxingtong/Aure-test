@@ -48,10 +48,6 @@ public class ToolCallingService {
     }
 
     public AnswerResult answerWithTools(List<ChatMessage> history, String question, String model, JsonNode document, JsonNode documents) {
-        if (isSearchRequest(question)) {
-            var result = registry.execute("search_latest_news", new ObjectMapper().createObjectNode().put("query", question.trim()));
-            return new AnswerResult(result, List.of("search_latest_news"));
-        }
         var context = new ArrayList<>(history == null ? List.of() : history);
         var traceId = java.util.UUID.randomUUID().toString();
 
@@ -67,9 +63,11 @@ public class ToolCallingService {
 
         // 1) 解析首轮输出
         var firstParse = parser.parse(answer);
-        if (!firstParse.naturalLanguage().isEmpty()) leadIn.append(firstParse.naturalLanguage()).append("\n\n");
         var calls = firstParse.calls();
+        // 只有真的发起工具调用时才保留 lead-in。普通回答的 naturalLanguage 就是 answer 本身，
+        // 提前追加会导致最终答案重复两遍。
         if (calls.isEmpty()) return finalize(answer, leadIn, toolCalls, thinking);
+        if (!firstParse.naturalLanguage().isEmpty()) leadIn.append(firstParse.naturalLanguage()).append("\n\n");
 
         // 2) 工具循环
         while (true) {
@@ -89,16 +87,23 @@ public class ToolCallingService {
 
             for (var call : calls) {
                 var arguments = call.arguments();
-                if ("read_document".equals(call.name())) {
-                    if (documents != null && !documents.isMissingNode() && !documents.isNull()) {
-                        if (arguments instanceof ObjectNode object) object.set("documents", documents);
-                    } else if (document != null && arguments instanceof ObjectNode object) {
-                        object.set("document", document);
-                    }
+                if ("read_document".equals(call.name()) && arguments instanceof ObjectNode object) {
+                    // 只允许使用本次请求中由 Electron 文件选择器授权的文档。
+                    // 先清掉模型自己编造的 documents/document，避免模型伪造文件内容。
+                    object.remove("documents");
+                    object.remove("document");
+                    var authorized = authorizedDocuments(document, documents);
+                    if (authorized != null) object.set("documents", authorized);
                 }
                 var result = registry.execute(call.name(), arguments);
                 traceWriter.write(java.util.Map.of("traceId", traceId, "type", "tool_result", "name", call.name(), "arguments", arguments, "result", result));
-                context.add(new ChatMessage("tool-" + callsUsed, "tool", call.name() + " 结果：" + result, "now"));
+                // Chat Completions 的 tool 消息必须带 tool_call_id 且前面要有 assistant tool_calls。
+                // 本实现使用自定义 JSON 协议，因此这里用 assistant + user 两条普通消息回填，
+                // 既不伪造原生 tool_calls，也不会触发 provider 的 422。
+                context.add(new ChatMessage("assistant-tool-" + callsUsed, "assistant",
+                        "调用工具 " + call.name() + "，参数：" + describeArguments(call.name(), arguments), "now"));
+                context.add(new ChatMessage("tool-" + callsUsed, "user",
+                        "工具 " + call.name() + " 返回：\n" + result, "now"));
                 toolCalls.add(call.name());
                 callsUsed++;
             }
@@ -112,9 +117,9 @@ public class ToolCallingService {
             traceWriter.write(java.util.Map.of("traceId", traceId, "type", "model_output", "model", model == null ? "" : model, "question", question, "history", context, "content", nextAnswer, "thinking", thinking.toString()));
 
             var nextParse = parser.parse(nextAnswer);
-            if (!nextParse.naturalLanguage().isEmpty()) leadIn.append(nextParse.naturalLanguage()).append("\n\n");
             var nextCalls = nextParse.calls();
             if (nextCalls.isEmpty()) return finalize(nextAnswer, leadIn, toolCalls, thinking);
+            if (!nextParse.naturalLanguage().isEmpty()) leadIn.append(nextParse.naturalLanguage()).append("\n\n");
             calls = nextCalls;
             answer = nextAnswer;
         }
@@ -130,11 +135,28 @@ public class ToolCallingService {
         return new AnswerResult(combined, List.copyOf(toolCalls), thinking.toString());
     }
 
-    private boolean isSearchRequest(String question) {
-        if (question == null || question.isBlank()) return false;
-        var normalized = question.toLowerCase();
-        return normalized.contains("搜索") || normalized.contains("联网") || normalized.contains("新闻")
-                || normalized.contains("查一下") || normalized.contains("查找") || normalized.contains("latest news")
-                || normalized.contains("web search") || normalized.contains("browse");
+    /**
+     * 只把请求里真实存在的授权文档传给工具；单文件旧字段也会转成数组。
+     */
+    private static JsonNode authorizedDocuments(JsonNode document, JsonNode documents) {
+        if (documents != null && documents.isArray() && !documents.isEmpty()) return documents;
+        if (document != null && document.isObject()) {
+            var array = com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.arrayNode();
+            array.add(document);
+            return array;
+        }
+        return null;
+    }
+
+    /**
+     * 回填给模型的参数摘要。文档正文可能很大，不能直接塞进 assistant 消息。
+     */
+    private static String describeArguments(String toolName, JsonNode arguments) {
+        if ("read_document".equals(toolName)) {
+            var filename = arguments == null ? "" : arguments.path("filename").asText("");
+            return filename.isBlank() ? "读取已授权的文档" : "filename=" + filename;
+        }
+        var text = arguments == null ? "" : arguments.toString();
+        return text.length() > 500 ? text.substring(0, 500) + "…" : text;
     }
 }

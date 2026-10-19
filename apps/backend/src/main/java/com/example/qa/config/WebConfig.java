@@ -9,8 +9,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+                // Vite 端口被占用时会自动换端口，固定 5173 会让开发环境 CORS 失效。
+                .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
                 .allowedMethods("GET", "POST", "OPTIONS")
-                .allowedHeaders("Content-Type", "Accept");
+                .allowedHeaders("Content-Type", "Accept", "X-Request-Id");
     }
 }

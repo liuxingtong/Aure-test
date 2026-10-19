@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class ToolErrorTest {
     @Test
     void classifiesUnknownToolAndInvalidArguments() throws Exception {
-        var registry = new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool());
+        var registry = TestToolRegistry.create();
         assertThatThrownBy(() -> registry.execute("missing", new ObjectMapper().createObjectNode()))
                 .isInstanceOf(ToolException.class)
                 .extracting("code").isEqualTo("UNKNOWN_TOOL");

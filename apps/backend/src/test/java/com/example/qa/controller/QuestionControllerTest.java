@@ -7,6 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.qa.service.QuestionService;
 import com.example.qa.ai.DemoAiClient;
 import com.example.qa.tools.CalculateTool;
+import com.example.qa.tools.MarkdownDocumentTool;
+import com.example.qa.tools.MarkdownOutputWriter;
+import com.example.qa.tools.PlanTool;
+import com.example.qa.tools.ReadDocumentTool;
 import com.example.qa.tools.SearchLatestNewsTool;
 import com.example.qa.tools.ToolCallingService;
 import com.example.qa.tools.ToolRegistry;
@@ -22,7 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(QuestionController.class)
-@Import({QuestionService.class, DemoAiClient.class, ToolCallingService.class, ToolRegistry.class, CalculateTool.class, SearchLatestNewsTool.class, QuestionCache.class, QaMetrics.class, RequestSizeFilter.class, TraceWriter.class})
+@Import({QuestionService.class, DemoAiClient.class, ToolCallingService.class, ToolRegistry.class, CalculateTool.class, SearchLatestNewsTool.class, PlanTool.class, MarkdownDocumentTool.class, MarkdownOutputWriter.class, ReadDocumentTool.class, QuestionCache.class, QaMetrics.class, RequestSizeFilter.class, TraceWriter.class})
 class QuestionControllerTest {
     @Autowired MockMvc mockMvc;
 

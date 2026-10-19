@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Path;
 
 class ToolRegistryTest {
     @Test
     void registersRequiredToolsAndExecutesCalculate() throws Exception {
-        var registry = new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool());
+        var registry = TestToolRegistry.create();
 
         assertThat(registry.names()).containsExactly("calculate", "search_latest_news", "create_plan", "generate_markdown", "read_document");
         assertThat(registry.execute("calculate", new ObjectMapper().readTree("{\"expression\":\"1+2\"}")))
@@ -24,10 +26,11 @@ class ToolRegistryTest {
     }
 
     @Test
-    void generatesPlanAndMarkdown() throws Exception {
+    void generatesPlanAndMarkdown(@TempDir Path tmp) throws Exception {
         var mapper = new ObjectMapper();
-        var registry = new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool(), new PlanTool(), new MarkdownDocumentTool());
+        var registry = TestToolRegistry.create(tmp);
         assertThat(registry.execute("create_plan", mapper.readTree("{\"goal\":\"发布应用\"}"))).contains("执行计划");
-        assertThat(registry.execute("generate_markdown", mapper.readTree("{\"title\":\"说明\",\"content\":\"正文\"}"))).isEqualTo("# 说明\n\n正文\n");
+        assertThat(registry.execute("generate_markdown", mapper.readTree("{\"title\":\"说明\",\"content\":\"正文\"}")))
+                .contains("# 说明", "正文", "saved_path:");
     }
 }

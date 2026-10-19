@@ -13,8 +13,11 @@ Electron Main Process
 Spring Boot REST API
   ├─ QuestionCache / Metrics / RequestLoggingFilter
   ├─ ToolCallingService
-  │   ├─ calculate
-  │   └─ search_latest_news
+  │   ├─ calculate（自带递归下降解析器）
+  │   ├─ search_latest_news
+  │   ├─ create_plan
+  │   ├─ generate_markdown
+  │   └─ read_document
   └─ AiClient
       ├─ DemoAiClient
       └─ ProviderAdapterAiClient

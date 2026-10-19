@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class QuestionCache {
+    static final int MAX_ENTRIES = 256;
     private final Duration ttl;
     private final Clock clock;
     private final Map<String, Entry> entries = new ConcurrentHashMap<>();
@@ -37,7 +38,13 @@ public class QuestionCache {
     }
 
     public void put(String key, String answer) {
-        entries.put(key, new Entry(answer, Instant.now(clock).plus(ttl)));
+        var now = Instant.now(clock);
+        // 过期项只在 get 时删除，长期只写不读的 key 会一直占内存。
+        entries.entrySet().removeIf(entry -> entry.getValue().expiresAt().isBefore(now));
+        if (entries.size() >= MAX_ENTRIES) {
+            entries.keySet().stream().findFirst().ifPresent(entries::remove);
+        }
+        entries.put(key, new Entry(answer, now.plus(ttl)));
     }
 
     private record Entry(String answer, Instant expiresAt) {}

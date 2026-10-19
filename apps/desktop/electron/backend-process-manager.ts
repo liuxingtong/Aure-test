@@ -125,18 +125,21 @@ export class BackendProcessManager {
     const child = this.child;
     this.child = undefined;
     if (child && !child.killed) {
-      const exited = new Promise<void>((resolve) => {
-        child.once('exit', () => resolve());
+      let exited = false;
+      const exitedPromise = new Promise<void>((resolve) => {
+        child.once('exit', () => { exited = true; resolve(); });
       });
       child.kill('SIGTERM');
-      await Promise.race([exited, this.clock.sleep(STOP_TIMEOUT_MS)]);
+      await Promise.race([exitedPromise, this.clock.sleep(STOP_TIMEOUT_MS)]);
+      // 优雅退出失败时必须强制结束，否则应用退出后会残留 Java 进程。
+      if (!exited) child.kill('SIGKILL');
     }
     this.setStatus({ state: 'stopped' });
   }
 
   private fail(message: string): BackendStatus {
     this.setStatus({ state: 'error', message });
-    if (this.child && !this.child.killed) this.child.kill('SIGTERM');
+    if (this.child && !this.child.killed) this.child.kill('SIGKILL');
     return this.getStatus();
   }
 

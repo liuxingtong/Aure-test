@@ -1,15 +1,17 @@
 server:
   port: 8080
+  address: ${SERVER_ADDRESS:127.0.0.1}
 spring:
   application:
     name: qa-backend
 cache:
   question-ttl: ${QUESTION_CACHE_TTL:5m}
 ai:
-  enabled: false
+  enabled: ${AI_ENABLED:false}
   provider: ${AI_PROVIDER:deepseek}
   base-url: ${AI_BASE_URL:https://api.deepseek.com}
   api-key: ${AI_API_KEY:}
   model: ${AI_MODEL:deepseek-chat}
   timeout: ${AI_TIMEOUT:30s}
   trace-directory: ${AI_TRACE_DIRECTORY:}
+  trace-content: ${AI_TRACE_CONTENT:false}

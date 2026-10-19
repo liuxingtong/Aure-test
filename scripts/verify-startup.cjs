@@ -9,10 +9,20 @@ const managerPath = path.resolve(__dirname, '../apps/desktop/dist-electron/elect
 const { BackendProcessManager } = require(managerPath);
 
 let killedWith;
+const exitListeners = [];
 const child = {
   killed: false,
-  kill(signal) { killedWith = signal; this.killed = true; return true; },
-  once() {},
+  kill(signal) {
+    killedWith = signal;
+    this.killed = true;
+    // 模拟子进程收到 SIGTERM 后退出，避免 stop() 超时后在测试里发出 SIGKILL。
+    for (const listener of exitListeners.splice(0)) listener(0);
+    return true;
+  },
+  once(event, listener) {
+    if (event === 'exit') exitListeners.push(listener);
+    return this;
+  },
   stdout: { on() {} },
   stderr: { on() {} }
 };

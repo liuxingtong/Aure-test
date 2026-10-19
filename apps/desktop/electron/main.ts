@@ -35,7 +35,9 @@ app.whenReady().then(async () => {
   if (!hasSingleInstanceLock) return;
   const statusBroadcaster = new BackendStatusBroadcaster();
   const userDataPath = app.getPath('userData');
-  await migrateLegacyUserData(userDataPath);
+  await migrateLegacyUserData(userDataPath).catch((error) => {
+    console.warn('[main] legacy user data migration failed', error);
+  });
   const settingsStore = new SettingsStore(path.join(userDataPath, 'settings.json'), {
     encrypt: (value) => safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(value).toString('base64') : value,
     decrypt: (value) => safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(value, 'base64')) : value
@@ -45,7 +47,7 @@ app.whenReady().then(async () => {
     platform: process.platform,
     resourcesPath: process.resourcesPath,
     userDataPath,
-    projectRoot: path.resolve(__dirname, '../../..'),
+    projectRoot: path.resolve(__dirname, '../../../..'),
     getEnvironment: () => process.env
   });
   backendManager.onStatusChange((status) => {
@@ -59,23 +61,23 @@ app.whenReady().then(async () => {
     () => statusBroadcaster.current(),
     async () => {
       await backendManager.stop();
-      const settings = await settingsStore.get();
-      process.env.AI_ENABLED = settings.apiKey ? 'true' : 'false';
-      process.env.AI_PROVIDER = settings.provider;
-      process.env.AI_BASE_URL = settings.baseUrl;
-      process.env.AI_MODEL = settings.model;
-      process.env.AI_API_KEY = settings.apiKey;
+      try {
+        applySettingsToEnvironment(await settingsStore.get());
+      } catch (error) {
+        console.warn('[main] settings reload failed, keeping current environment', error);
+      }
       return backendManager.start();
     }
   );
-  const startup = settingsStore.get().then((settings) => {
-    process.env.AI_ENABLED = settings.apiKey ? 'true' : 'false';
-    process.env.AI_PROVIDER = settings.provider;
-    process.env.AI_BASE_URL = settings.baseUrl;
-    process.env.AI_MODEL = settings.model;
-    process.env.AI_API_KEY = settings.apiKey;
-    return backendManager.start();
-  });
+  const startup = settingsStore.get()
+    .then((settings) => {
+      applySettingsToEnvironment(settings);
+      return backendManager.start();
+    })
+    .catch((error) => {
+      console.warn('[main] settings load failed, starting with current environment', error);
+      return backendManager.start();
+    });
   createWindow();
   void startup;
   app.on('before-quit', (event) => {
@@ -100,6 +102,16 @@ app.on('second-instance', () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+function applySettingsToEnvironment(settings: { apiKey: string; provider: string; baseUrl: string; model: string }): void {
+  // 设置文件为空时允许 .env.local 起步（开发环境常见用法）。
+  const apiKey = settings.apiKey || process.env.AI_API_KEY || '';
+  process.env.AI_ENABLED = apiKey ? 'true' : 'false';
+  process.env.AI_PROVIDER = settings.provider;
+  process.env.AI_BASE_URL = settings.baseUrl;
+  process.env.AI_MODEL = settings.model;
+  process.env.AI_API_KEY = apiKey;
+}
 
 async function migrateLegacyUserData(userDataPath: string): Promise<void> {
   const legacyDirectory = path.join(app.getPath('appData'), '@qa-desktop', 'desktop');

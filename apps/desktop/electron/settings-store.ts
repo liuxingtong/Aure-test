@@ -33,7 +33,11 @@ export class SettingsStore {
       this.cached = { ...merged, model: normalizeModel(merged.provider, merged.model) };
       if (this.cached.model !== merged.model) await this.write(this.cached);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== 'ENOENT') {
+        // settings.json 损坏或 keychain 解密失败时不能阻塞启动；回退默认设置并保留告警。
+        console.warn('[settings] failed to load settings, using defaults', error);
+      }
       this.cached = { ...defaultAiSettings };
     }
     return { ...this.cached };

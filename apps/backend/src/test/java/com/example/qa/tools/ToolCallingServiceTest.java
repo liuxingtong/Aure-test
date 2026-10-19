@@ -17,21 +17,26 @@ class ToolCallingServiceTest {
             if (calls.getAndIncrement() == 0) {
                 return "{\"tool_calls\":[{\"name\":\"calculate\",\"arguments\":{\"expression\":\"2+2\"}}]}";
             }
-            assertThat(history).anyMatch(message -> message.role().equals("tool") && message.content().contains("4"));
+            assertThat(history).anyMatch(message -> message.role().equals("user") && message.content().contains("4"));
             return "最终答案：4";
         };
-        var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+        var service = new ToolCallingService(client, TestToolRegistry.create(), new ObjectMapper());
 
         assertThat(service.answerWithTools(List.of(), "算一下", null).answer()).isEqualTo("最终答案：4");
         assertThat(calls).hasValue(2);
     }
 
     @Test
-    void searchIntentExecutesSearchToolWithoutDependingOnModelToolCalling() {
-        var service = new ToolCallingService((history, question) -> "模型不应先回答", new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+    void searchKeywordsDoNotBypassTheModel() {
+        var calls = new AtomicInteger();
+        AiClient client = (history, question) -> {
+            calls.incrementAndGet();
+            return "正常回答";
+        };
+        var service = new ToolCallingService(client, TestToolRegistry.create(), new ObjectMapper());
 
-        assertThat(service.answer(List.of(), "现在可以联网搜索 AI 新闻吗"))
-                .contains("Google News", "Bing News");
+        assertThat(service.answer(List.of(), "现在可以联网搜索 AI 新闻吗")).isEqualTo("正常回答");
+        assertThat(calls).hasValue(1);
     }
 
     @Test
@@ -41,11 +46,12 @@ class ToolCallingServiceTest {
             if (calls.getAndIncrement() == 0) {
                 return "我来搜索一下：{\"tool_calls\":[{\"name\":\"search_latest_news\",\"arguments\":{\"query\":\"AI\"}}]}";
             }
+            assertThat(history).anyMatch(message -> message.role().equals("user") && message.content().contains("search_latest_news"));
             return "下面是新闻链接，请查收。";
         };
-        var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+        var service = new ToolCallingService(client, TestToolRegistry.create(), new ObjectMapper());
 
-        assertThat(service.answer(List.of(), "热门 AI 新闻")).contains("Google News").doesNotContain("tool_calls").doesNotContain("{\"tool_calls\"");
+        assertThat(service.answer(List.of(), "热门 AI 新闻")).isEqualTo("我来搜索一下：\n\n下面是新闻链接，请查收。");
         assertThat(calls).hasValue(2);
     }
 
@@ -53,13 +59,30 @@ class ToolCallingServiceTest {
     void forcesFinalAnswerAfterMaxCallsAreExhausted() {
         // 永远返回 tool call，验证不会无限循环——用尽 MAX_CALLS 后应被强制要答案
         AiClient client = (history, question) -> "{\"tool_calls\":[{\"name\":\"calculate\",\"arguments\":{\"expression\":\"1+1\"}}]}";
-        var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+        var service = new ToolCallingService(client, TestToolRegistry.create(), new ObjectMapper());
 
         // 第 7 次调用（6 次工具 + 1 次强制终答）应返回非空答案
         var result = service.answerWithTools(List.of(), "算 1+1", null);
 
         assertThat(result.answer()).isNotEmpty();
         assertThat(result.toolCalls()).hasSize(ToolCallingService.MAX_CALLS);
+    }
+
+    @Test
+    void injectsOnlyAuthorizedDocumentIntoReadDocument() throws Exception {
+        var calls = new AtomicInteger();
+        AiClient client = (history, question) -> {
+            if (calls.getAndIncrement() == 0) {
+                return "{\"tool_calls\":[{\"name\":\"read_document\",\"arguments\":{\"filename\":\"notes\"}}]}";
+            }
+            assertThat(history).anyMatch(message -> message.role().equals("user") && message.content().contains("# Notes"));
+            return "文档内容如上。";
+        };
+        var service = new ToolCallingService(client, TestToolRegistry.create(), new ObjectMapper());
+        var document = new ObjectMapper().readTree("{\"name\":\"notes.md\",\"extension\":\"md\",\"content\":\"# Notes\"}");
+
+        assertThat(service.answerWithTools(List.of(), "读一下文档", null, document).answer()).isEqualTo("文档内容如上。");
+        assertThat(calls).hasValue(2);
     }
 
     @Test
@@ -71,7 +94,7 @@ class ToolCallingServiceTest {
             }
             return "最终结果：4";
         };
-        var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+        var service = new ToolCallingService(client, TestToolRegistry.create(), new ObjectMapper());
 
         var result = service.answerWithTools(List.of(), "算一下", null);
 
