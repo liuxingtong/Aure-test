@@ -51,7 +51,7 @@
 
 - API Key、Base URL、模型名称可在账户设置中配置
 - API Key 在 `safeStorage` 可用时加密后保存，不可用时只依赖本地配置文件权限；界面不会回显已保存的明文
-- 历史列表中的模型选择会随请求发送到后端
+- 输入区或账户设置中选择的模型会随请求发送到后端
 - `deepseek-reasoner` 等返回 `reasoning_content`/`reasoning`/`reflection` 的模型，前端会展示“已思考”可展开块
 
 ### Function Calling 工具
