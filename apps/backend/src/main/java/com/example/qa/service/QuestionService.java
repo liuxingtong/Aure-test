@@ -27,7 +27,7 @@ public class QuestionService {
 
     public QuestionResponse ask(QuestionRequest request) {
         metrics.question();
-        var key = request.question().trim() + "\n" + request.history();
+        var key = request.model() + "\n" + request.question().trim() + "\n" + request.history();
         var answer = cache.get(key).orElse(null);
         if (answer != null) {
             metrics.cacheHit();
@@ -35,8 +35,12 @@ public class QuestionService {
         } else {
             try {
                 log.info("processing question conversationId={} historySize={}", request.conversationId(), request.history().size());
-                answer = toolCallingService.answer(request.history(), request.question());
+                var result = toolCallingService.answerWithTools(request.history(), request.question(), request.model(), request.document());
+                answer = result.answer();
                 cache.put(key, answer);
+                var toolCalls = result.toolCalls();
+                var data = new QuestionResponse.Data(request.conversationId(), UUID.randomUUID().toString(), request.question().trim(), answer, toolCalls, Instant.now());
+                return QuestionResponse.success(data);
             } catch (RuntimeException exception) {
                 metrics.failure();
                 log.warn("question processing failed conversationId={} type={}", request.conversationId(), exception.getClass().getSimpleName());

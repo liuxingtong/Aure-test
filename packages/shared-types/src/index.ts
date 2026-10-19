@@ -25,12 +25,15 @@ export interface AiSettings {
   apiKey: string;
   memoryEnabled: boolean;
   memory: string;
+  apiKeyConfigured?: boolean;
 }
 
 export interface AskQuestionRequest {
   conversationId: string;
   question: string;
   history: ChatMessage[];
+  model?: string;
+  document?: { name: string; extension: string; content: string };
 }
 
 export interface AskQuestionResponse {

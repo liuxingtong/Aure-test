@@ -1,9 +1,15 @@
-import { ipcMain, shell } from 'electron';
+import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { promises as fs } from 'node:fs';
 import type { AiSettings, AskQuestionRequest, AskQuestionResponse, Conversation } from '@qa-desktop/shared-types';
 import { askBackend } from './backend-client';
 import type { BackendStatus } from './backend-process-manager';
 import { HistoryRepository } from './history-repository';
 import { SettingsStore } from './settings-store';
+import { validateDocumentBuffer } from './document-picker';
+
+export function publicAiSettings(settings: AiSettings): AiSettings {
+  return { ...settings, apiKey: '', apiKeyConfigured: Boolean(settings.apiKey) };
+}
 
 export class BackendStatusBroadcaster {
   private status: BackendStatus = { state: 'stopped' };
@@ -44,12 +50,13 @@ export function registerIpcHandlers(
   ipcMain.handle('system:check-backend', async (): Promise<boolean> => getBackendStatus().state === 'ready');
   ipcMain.handle('backend:status', async (): Promise<BackendStatus> => getBackendStatus());
   ipcMain.handle('backend:restart', async (): Promise<BackendStatus> => restartBackend());
-  ipcMain.handle('settings:get-ai', async (): Promise<AiSettings> => settingsStore.get());
-  ipcMain.handle('settings:save-ai', async (_event, settings: AiSettings): Promise<AiSettings> => settingsStore.save(settings));
+  ipcMain.handle('settings:get-ai', async (): Promise<AiSettings> => publicAiSettings(await settingsStore.get()));
+  ipcMain.handle('settings:save-ai', async (_event, settings: AiSettings): Promise<AiSettings> => publicAiSettings(await settingsStore.save(settings)));
   ipcMain.handle('settings:list-models', async (_event, settings: AiSettings): Promise<string[]> => {
+    const stored = await settingsStore.get();
     const endpoint = `${settings.baseUrl.replace(/\/$/, '')}/models`;
     try {
-      const response = await fetch(endpoint, { headers: settings.apiKey ? { Authorization: `Bearer ${settings.apiKey}` } : {} });
+      const response = await fetch(endpoint, { headers: stored.apiKey ? { Authorization: `Bearer ${stored.apiKey}` } : {} });
       if (!response.ok) return [];
       const payload = await response.json() as { data?: Array<{ id?: string }> };
       return (payload.data ?? []).flatMap((model) => model.id && !isNonChatModel(model.id) ? [model.id] : []);
@@ -61,6 +68,22 @@ export function registerIpcHandlers(
     const parsed = new URL(url);
     if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('仅允许打开 HTTP/HTTPS 外部链接');
     await shell.openExternal(parsed.toString());
+  });
+  ipcMain.handle('document:choose', async (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const options = {
+      properties: ['openFile'],
+      filters: [{ name: '文档', extensions: ['md', 'txt', 'json'] }]
+    } as const;
+    const result = window ? await dialog.showOpenDialog(window, options) : await dialog.showOpenDialog(options);
+    if (result.canceled || result.filePaths.length === 0) return null;
+    const filePath = result.filePaths[0];
+    try {
+      return validateDocumentBuffer(filePath, await fs.readFile(filePath));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') throw new Error('文件不存在');
+      throw error;
+    }
   });
 }
 

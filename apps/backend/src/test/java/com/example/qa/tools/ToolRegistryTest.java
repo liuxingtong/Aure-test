@@ -10,7 +10,7 @@ class ToolRegistryTest {
     void registersRequiredToolsAndExecutesCalculate() throws Exception {
         var registry = new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool());
 
-        assertThat(registry.names()).containsExactly("calculate", "search_latest_news", "create_plan", "generate_markdown");
+        assertThat(registry.names()).containsExactly("calculate", "search_latest_news", "create_plan", "generate_markdown", "read_document");
         assertThat(registry.execute("calculate", new ObjectMapper().readTree("{\"expression\":\"1+2\"}")))
                 .isEqualTo("3");
     }
