@@ -27,9 +27,15 @@ abstract class AbstractChatCompletionsAdapter implements ProviderAdapter {
     @Override
     @SuppressWarnings("unchecked")
     public String chat(List<ChatMessage> history, String question) {
+        return chat(history, question, null);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public String chat(List<ChatMessage> history, String question, String model) {
         var messages = promptBuilder.build(history, question).stream()
                 .map(message -> Map.of("role", message.role(), "content", message.content())).toList();
-        var body = Map.of("model", properties.model(), "messages", messages);
+        var body = Map.of("model", model == null || model.isBlank() ? properties.model() : model, "messages", messages);
         Map<String, Object> response = client.post().uri("/chat/completions")
                 .header("Authorization", "Bearer " + properties.apiKey()).body(body).retrieve()
                 .onStatus(status -> status.isError(), (request, responseMessage) -> {

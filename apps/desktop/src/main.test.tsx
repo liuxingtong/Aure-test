@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from './main';
@@ -119,6 +119,9 @@ describe('App', () => {
     expect(screen.getByText('后端服务暂不可用，请稍后重试')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '重新尝试' }));
     expect(screen.getByRole('button', { name: '发送消息' })).not.toBeDisabled();
+    await user.click(screen.getByRole('button', { name: '发送消息' }));
+    await waitFor(() => expect(window.electronAPI?.askQuestion).toHaveBeenCalledTimes(2));
+    expect(window.electronAPI?.askQuestion).toHaveBeenLastCalledWith(expect.objectContaining({ history: [] }));
   });
 
   it('opens http news links through the Electron shell', async () => {

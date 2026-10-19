@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { BackendStatusBroadcaster } from './ipc';
+import { BackendStatusBroadcaster, publicAiSettings } from './ipc';
 
 describe('BackendStatusBroadcaster', () => {
   it('broadcasts starting and ready states in order', () => {
@@ -33,5 +33,12 @@ describe('BackendStatusBroadcaster', () => {
     broadcaster.publish({ state: 'ready' });
 
     expect(listener).not.toHaveBeenCalled();
+  });
+});
+
+describe('publicAiSettings', () => {
+  it('never exposes the stored API key to the renderer', () => {
+    expect(publicAiSettings({ provider: 'deepseek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat', apiKey: 'secret', memoryEnabled: false, memory: '' }))
+      .toMatchObject({ apiKey: '', apiKeyConfigured: true });
   });
 });

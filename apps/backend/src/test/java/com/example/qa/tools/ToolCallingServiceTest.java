@@ -6,22 +6,24 @@ import com.example.qa.ai.AiClient;
 import com.example.qa.model.ChatMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 class ToolCallingServiceTest {
     @Test
     void executesToolAndReturnsToolResultWithoutLeakingProtocol() {
-        AiClient client = new AiClient() {
-            private int calls;
-            @Override public String chat(List<ChatMessage> history, String question) {
-                return calls++ == 0
-                        ? "{\"tool_calls\":[{\"name\":\"calculate\",\"arguments\":{\"expression\":\"2+2\"}}]}"
-                        : "最终答案：4";
+        var calls = new AtomicInteger();
+        AiClient client = (history, question) -> {
+            if (calls.getAndIncrement() == 0) {
+                return "{\"tool_calls\":[{\"name\":\"calculate\",\"arguments\":{\"expression\":\"2+2\"}}]}";
             }
+            assertThat(history).anyMatch(message -> message.role().equals("tool") && message.content().contains("4"));
+            return "最终答案：4";
         };
         var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
 
-        assertThat(service.answer(List.of(), "算一下")).isEqualTo("4");
+        assertThat(service.answerWithTools(List.of(), "算一下", null).answer()).isEqualTo("最终答案：4");
+        assertThat(calls).hasValue(2);
     }
 
     @Test

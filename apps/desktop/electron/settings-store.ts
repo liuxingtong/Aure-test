@@ -40,7 +40,8 @@ export class SettingsStore {
   }
 
   async save(settings: AiSettings): Promise<AiSettings> {
-    this.cached = { ...defaultAiSettings, ...settings };
+    const existingKey = this.cached?.apiKey ?? '';
+    this.cached = { ...defaultAiSettings, ...settings, apiKey: settings.apiKey || existingKey };
     await this.write(this.cached);
     return { ...this.cached };
   }

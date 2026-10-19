@@ -17,4 +17,15 @@ describe('SettingsStore', () => {
     expect(JSON.parse(await readFile(file, 'utf8')).apiKey).toBe('enc:cipher:secret');
     await expect(new SettingsStore(file, codec).get()).resolves.toEqual(settings);
   });
+
+  it('keeps the stored key when the UI saves settings without entering it again', async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'qa-settings-')); directories.push(directory);
+    const file = path.join(directory, 'settings.json');
+    const codec = { encrypt: (value: string) => `cipher:${value}`, decrypt: (value: string) => value.replace('cipher:', '') };
+    const store = new SettingsStore(file, codec);
+    await store.save({ provider: 'deepseek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat', apiKey: 'secret', memoryEnabled: false, memory: '' });
+    await store.save({ provider: 'deepseek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat', apiKey: '', memoryEnabled: true, memory: '记忆' });
+
+    await expect(store.get()).resolves.toMatchObject({ apiKey: 'secret', memory: '记忆' });
+  });
 });
