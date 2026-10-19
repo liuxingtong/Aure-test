@@ -6,8 +6,11 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class AbstractChatCompletionsAdapter implements ProviderAdapter {
+    private static final Logger log = LoggerFactory.getLogger(AbstractChatCompletionsAdapter.class);
     private final RestClient client;
     private final AiProperties properties;
     private final PromptBuilder promptBuilder = new PromptBuilder();
@@ -28,7 +31,12 @@ abstract class AbstractChatCompletionsAdapter implements ProviderAdapter {
                 .map(message -> Map.of("role", message.role(), "content", message.content())).toList();
         var body = Map.of("model", properties.model(), "messages", messages);
         Map<String, Object> response = client.post().uri("/chat/completions")
-                .header("Authorization", "Bearer " + properties.apiKey()).body(body).retrieve().body(Map.class);
+                .header("Authorization", "Bearer " + properties.apiKey()).body(body).retrieve()
+                .onStatus(status -> status.isError(), (request, responseMessage) -> {
+                    var errorBody = new String(responseMessage.getBody().readAllBytes());
+                    log.warn("provider request failed status={} body={}", responseMessage.getStatusCode().value(), errorBody);
+                    throw new IllegalStateException("AI 服务返回 HTTP " + responseMessage.getStatusCode().value() + ": " + errorBody);
+                }).body(Map.class);
         var choices = (List<Map<String, Object>>) response.getOrDefault("choices", List.of());
         if (choices.isEmpty()) throw new IllegalStateException("AI 返回结果为空");
         var message = (Map<String, Object>) choices.get(0).get("message");
