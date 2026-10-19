@@ -1,4 +1,5 @@
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import type { OpenDialogOptions } from 'electron';
 import { promises as fs } from 'node:fs';
 import type { AiSettings, AskQuestionRequest, AskQuestionResponse, Conversation } from '@qa-desktop/shared-types';
 import { askBackend } from './backend-client';
@@ -71,7 +72,7 @@ export function registerIpcHandlers(
   });
   ipcMain.handle('document:choose', async (event) => {
     const window = BrowserWindow.fromWebContents(event.sender);
-    const options = {
+    const options: OpenDialogOptions = {
       properties: ['openFile'],
       filters: [{ name: '文档', extensions: ['md', 'txt', 'json'] }]
     };
