@@ -23,7 +23,11 @@ export class BackendStatusBroadcaster {
   }
 }
 
-export function registerIpcHandlers(historyRepository: HistoryRepository, getBackendStatus: () => BackendStatus = () => ({ state: 'stopped' })) {
+export function registerIpcHandlers(
+  historyRepository: HistoryRepository,
+  getBackendStatus: () => BackendStatus = () => ({ state: 'stopped' }),
+  restartBackend: () => Promise<BackendStatus> = async () => getBackendStatus()
+) {
   ipcMain.handle('question:ask', async (_event, request: AskQuestionRequest): Promise<AskQuestionResponse> => {
     const question = request.question.trim();
     if (!question) return { success: false, error: { code: 'VALIDATION_ERROR', message: '问题不能为空', retryable: false } };
@@ -36,4 +40,5 @@ export function registerIpcHandlers(historyRepository: HistoryRepository, getBac
   ipcMain.handle('system:get-version', async (): Promise<string> => '0.1.0');
   ipcMain.handle('system:check-backend', async (): Promise<boolean> => getBackendStatus().state === 'ready');
   ipcMain.handle('backend:status', async (): Promise<BackendStatus> => getBackendStatus());
+  ipcMain.handle('backend:restart', async (): Promise<BackendStatus> => restartBackend());
 }

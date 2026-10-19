@@ -10,6 +10,7 @@ interface ElectronAPI {
   getVersion(): Promise<string>;
   checkBackend(): Promise<boolean>;
   getBackendStatus(): Promise<BackendStatus>;
+  restartBackend(): Promise<BackendStatus>;
   onBackendStatus(listener: (status: BackendStatus) => void): () => void;
 }
 

@@ -7,6 +7,7 @@ import './styles.css';
 type Theme = 'light' | 'dark';
 type Role = 'user' | 'assistant';
 type Message = { id: string; role: Role; content: string; createdAt: string };
+type BackendStatus = { state: 'starting' | 'ready' | 'error' | 'stopped'; message?: string };
 export function App() {
   const [theme, setTheme] = useState<Theme>('light');
   const [question, setQuestion] = useState('');
@@ -14,15 +15,28 @@ export function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastFailedQuestion, setLastFailedQuestion] = useState('');
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>(() => window.electronAPI ? { state: 'starting', message: '正在启动后端服务…' } : { state: 'ready' });
   const [conversationId, setConversationId] = useState('local-conversation');
   const [conversations, setConversations] = useState<Array<{ id: string; title: string; messages: Message[]; createdAt: string; updatedAt: string }>>([]);
   const hasMessages = messages.length > 0;
-  const canSend = question.trim().length > 0 && !isLoading;
+  const backendReady = backendStatus.state === 'ready';
+  const canSend = question.trim().length > 0 && !isLoading && backendReady;
   const themeLabel = useMemo(() => theme === 'light' ? '切换到深色主题' : '切换到浅色主题', [theme]);
 
   useEffect(() => {
     void window.electronAPI?.listHistory().then((items) => setConversations(items));
+    if (!window.electronAPI) return;
+    let active = true;
+    void window.electronAPI.getBackendStatus().then((status) => { if (active) setBackendStatus(status); });
+    const unsubscribe = window.electronAPI.onBackendStatus((status) => setBackendStatus(status));
+    return () => { active = false; unsubscribe(); };
   }, []);
+
+  async function restartBackend() {
+    if (!window.electronAPI) return;
+    setBackendStatus({ state: 'starting', message: '正在重新启动后端服务…' });
+    setBackendStatus(await window.electronAPI.restartBackend());
+  }
 
   async function submitQuestion(event: FormEvent) {
     event.preventDefault();
@@ -67,15 +81,16 @@ export function App() {
       </aside>
 
       <main className="chat-panel">
-        <header className="chat-header"><span className="chat-title">{conversations.find((conversation) => conversation.id === conversationId)?.title || '新对话'}</span><span className="connection-state"><span className="status-dot" />本地演示</span></header>
+        <header className="chat-header"><span className="chat-title">{conversations.find((conversation) => conversation.id === conversationId)?.title || '新对话'}</span><span className={`connection-state ${backendReady ? 'ready' : 'not-ready'}`}><span className="status-dot" />{backendReady ? '后端已就绪' : backendStatus.state === 'error' ? '后端启动失败' : '正在连接后端'}</span></header>
         <section className={`message-area ${hasMessages ? 'has-messages' : ''}`} aria-live="polite">
           {!hasMessages && !isLoading ? <div className="welcome-state"><div className="welcome-mark" aria-hidden="true">问</div><h1>有什么可以帮忙的？</h1><p>输入问题，开始一段新的对话。</p></div> : <div className="message-list">
             {messages.map((message) => <article className={`message-row ${message.role}`} key={message.id}><div className="message-avatar" aria-hidden="true">{message.role === 'user' ? '你' : '问'}</div><div className="message-content">{message.role === 'assistant' ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown> : <p>{message.content}</p>}</div></article>)}
             {isLoading && <div className="message-row assistant"><div className="message-avatar" aria-hidden="true">问</div><div className="message-content loading-dots" aria-label="正在生成回答"><span /><span /><span /></div></div>}
             {errorMessage && <div className="error-state" role="alert"><span>{errorMessage}</span><button type="button" onClick={() => { setQuestion(lastFailedQuestion); setErrorMessage(null); }} aria-label="重新尝试">重新尝试</button></div>}
           </div>}
+          {backendStatus.state !== 'ready' && <div className={`backend-status ${backendStatus.state === 'error' ? 'error' : ''}`} role="status"><span>{backendStatus.message || '正在启动后端服务…'}</span>{backendStatus.state === 'error' && <button type="button" onClick={() => void restartBackend()}>重新启动服务</button>}</div>}
         </section>
-        <form className="composer-wrap" onSubmit={submitQuestion}><div className="composer"><textarea value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="发送消息" rows={1} aria-label="问题输入框" disabled={isLoading} /><button className="send-button" type="submit" disabled={!canSend} aria-label="发送消息">↑</button></div><p className="composer-hint">AI 可能会犯错，请核对重要信息。</p></form>
+        <form className="composer-wrap" onSubmit={submitQuestion}><div className="composer"><textarea value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="发送消息" rows={1} aria-label="问题输入框" disabled={isLoading || !backendReady} /><button className="send-button" type="submit" disabled={!canSend} aria-label="发送消息">↑</button></div><p className="composer-hint">AI 可能会犯错，请核对重要信息。</p></form>
       </main>
     </div>
   );

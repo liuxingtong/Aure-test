@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getVersion: () => ipcRenderer.invoke('system:get-version'),
   checkBackend: () => ipcRenderer.invoke('system:check-backend'),
   getBackendStatus: () => ipcRenderer.invoke('backend:status'),
+  restartBackend: () => ipcRenderer.invoke('backend:restart'),
   onBackendStatus: (listener: (status: BackendStatus) => void) => {
     const wrapped = (_event: Electron.IpcRendererEvent, status: BackendStatus) => listener(status);
     ipcRenderer.on('backend:status', wrapped);

@@ -4,6 +4,51 @@ import { describe, expect, it, vi } from 'vitest';
 import { App } from './main';
 
 describe('App', () => {
+  it('shows startup state and disables sending until backend is ready', async () => {
+    let statusListener: ((status: { state: 'starting' | 'ready' | 'error' | 'stopped'; message?: string }) => void) | undefined;
+    window.electronAPI = {
+      listHistory: vi.fn().mockResolvedValue([]),
+      saveHistory: vi.fn().mockResolvedValue(undefined),
+      deleteHistory: vi.fn().mockResolvedValue(undefined),
+      clearHistory: vi.fn().mockResolvedValue(undefined),
+      askQuestion: vi.fn(),
+      getVersion: vi.fn(),
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'starting', message: '正在启动后端服务…' }),
+      onBackendStatus: vi.fn((listener) => { statusListener = listener; return () => undefined; }),
+      restartBackend: vi.fn()
+    };
+
+    render(<App />);
+
+    expect(await screen.findByText('正在启动后端服务…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '发送消息' })).toBeDisabled();
+    statusListener?.({ state: 'ready', message: '后端服务已就绪' });
+    expect(await screen.findByText('后端已就绪')).toBeInTheDocument();
+  });
+
+  it('shows a backend startup error and invokes restart when retrying', async () => {
+    const user = userEvent.setup();
+    window.electronAPI = {
+      listHistory: vi.fn().mockResolvedValue([]),
+      saveHistory: vi.fn().mockResolvedValue(undefined),
+      deleteHistory: vi.fn().mockResolvedValue(undefined),
+      clearHistory: vi.fn().mockResolvedValue(undefined),
+      askQuestion: vi.fn(),
+      getVersion: vi.fn(),
+      checkBackend: vi.fn(),
+      getBackendStatus: vi.fn().mockResolvedValue({ state: 'error', message: '端口 8080 已被占用' }),
+      restartBackend: vi.fn().mockResolvedValue({ state: 'starting', message: '正在重新启动后端服务…' }),
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined)
+    };
+
+    render(<App />);
+
+    expect(await screen.findByText('端口 8080 已被占用')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '重新启动服务' }));
+    expect(window.electronAPI?.restartBackend).toHaveBeenCalledTimes(1);
+  });
+
   it('renders the OpenAI-style empty state', async () => {
     window.electronAPI = {
       listHistory: vi.fn().mockResolvedValue([]),
@@ -14,7 +59,8 @@ describe('App', () => {
       getVersion: vi.fn(),
       checkBackend: vi.fn(),
       getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
-      onBackendStatus: vi.fn().mockReturnValue(() => undefined)
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined),
+      restartBackend: vi.fn()
     };
 
     render(<App />);
@@ -34,10 +80,12 @@ describe('App', () => {
       getVersion: vi.fn(),
       checkBackend: vi.fn(),
       getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
-      onBackendStatus: vi.fn().mockReturnValue(() => undefined)
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined),
+      restartBackend: vi.fn()
     };
 
     render(<App />);
+    await screen.findByText('后端已就绪');
     await user.type(screen.getByLabelText('问题输入框'), '测试问题');
     await user.click(screen.getByRole('button', { name: '发送消息' }));
 
@@ -57,10 +105,12 @@ describe('App', () => {
       getVersion: vi.fn(),
       checkBackend: vi.fn(),
       getBackendStatus: vi.fn().mockResolvedValue({ state: 'ready' }),
-      onBackendStatus: vi.fn().mockReturnValue(() => undefined)
+      onBackendStatus: vi.fn().mockReturnValue(() => undefined),
+      restartBackend: vi.fn()
     };
 
     render(<App />);
+    await screen.findByText('后端已就绪');
     await user.type(screen.getByLabelText('问题输入框'), '失败问题');
     await user.click(screen.getByRole('button', { name: '发送消息' }));
 

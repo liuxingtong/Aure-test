@@ -40,7 +40,11 @@ app.whenReady().then(() => {
     statusBroadcaster.publish(status);
     for (const window of BrowserWindow.getAllWindows()) window.webContents.send('backend:status', status);
   });
-  registerIpcHandlers(new HistoryRepository(path.join(app.getPath('userData'), 'conversations.json')), () => statusBroadcaster.current());
+  registerIpcHandlers(
+    new HistoryRepository(path.join(app.getPath('userData'), 'conversations.json')),
+    () => statusBroadcaster.current(),
+    async () => { await backendManager.stop(); return backendManager.start(); }
+  );
   const startup = backendManager.start();
   createWindow();
   void startup;
