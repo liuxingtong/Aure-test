@@ -1,4 +1,4 @@
-import { appendFileSync, mkdirSync } from 'node:fs';
+import { appendFileSync, mkdirSync, statSync, renameSync } from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
 import { spawn as systemSpawn, type ChildProcess } from 'node:child_process';
@@ -44,6 +44,7 @@ const BACKEND_PORT = 8080;
 const HEALTH_URL = `http://${BACKEND_HOST}:${BACKEND_PORT}/api/v1/health`;
 const HEALTH_TIMEOUT_MS = 30_000;
 const POLL_INTERVAL_MS = 500;
+const MAX_LOG_BYTES = 2 * 1024 * 1024;
 
 export class BackendProcessManager {
   private readonly options: Required<Pick<BackendProcessManagerOptions, 'mode' | 'platform' | 'resourcesPath' | 'userDataPath'>> & BackendProcessManagerOptions;
@@ -146,6 +147,11 @@ export class BackendProcessManager {
     mkdirSync(logDirectory, { recursive: true });
     const write = (chunk: unknown) => {
       const text = String(chunk).replace(/(AI_API_KEY=|Authorization: Bearer )[^\s]+/g, '$1[REDACTED]');
+      try {
+        if (statSync(logFile).size + Buffer.byteLength(text) > MAX_LOG_BYTES) renameSync(logFile, `${logFile}.1`);
+      } catch {
+        // The log file may not exist on the first output chunk.
+      }
       appendFileSync(logFile, text, 'utf8');
     };
     child.stdout?.on('data', write);

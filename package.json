@@ -7,6 +7,8 @@
     "dev:desktop": "npm --workspace apps/desktop run dev",
     "build:desktop": "npm --workspace apps/desktop run build",
     "verify:ipc": "npm --workspace apps/desktop run build:electron && electron scripts/verify-ipc.cjs",
+    "verify:startup:mac": "npm --workspace apps/desktop run build:electron && node scripts/verify-startup.cjs --platform darwin --arch arm64",
+    "verify:startup:windows": "npm --workspace apps/desktop run build:electron && node scripts/verify-startup.cjs --platform win32 --arch x64",
     "verify:all": "bash scripts/verify-all.sh",
     "typecheck": "npm --workspace packages/shared-types run typecheck && npm --workspace apps/desktop run typecheck"
   }

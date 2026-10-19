@@ -3,6 +3,9 @@ import path from 'node:path';
 import { BackendStatusBroadcaster, registerIpcHandlers } from './ipc';
 import { BackendProcessManager } from './backend-process-manager';
 import { setBackendReady } from './backend-client';
+
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+let isQuitting = false;
 import { HistoryRepository } from './history-repository';
 
 function createWindow() {
@@ -27,6 +30,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (!hasSingleInstanceLock) return;
   const statusBroadcaster = new BackendStatusBroadcaster();
   const backendManager = new BackendProcessManager({
     mode: app.isPackaged ? 'production' : 'development',
@@ -49,12 +53,22 @@ app.whenReady().then(() => {
   createWindow();
   void startup;
   app.on('before-quit', (event) => {
+    if (isQuitting) return;
+    isQuitting = true;
     event.preventDefault();
     void backendManager.stop().finally(() => app.exit(0));
   });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+app.on('second-instance', () => {
+  const window = BrowserWindow.getAllWindows()[0];
+  if (window) {
+    if (window.isMinimized()) window.restore();
+    window.focus();
+  }
 });
 
 app.on('window-all-closed', () => {

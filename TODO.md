@@ -178,23 +178,23 @@
 
 ## 阶段 11：正式版一键启动全部服务
 
-- [ ] Electron 主进程增加 `BackendProcessManager`
-- [ ] 开发环境支持自动启动 Spring Boot
-- [ ] 正式版纳入 Spring Boot 可执行 JAR
-- [ ] Mac arm64 纳入匹配的 Java Runtime
-- [ ] Windows x64 纳入匹配的 Java Runtime
-- [ ] 增加 `/api/v1/health` 启动轮询，启动超时固定为 30 秒
-- [ ] 增加 8080 端口占用检测和明确错误
-- [ ] 增加单实例锁和重复后端启动保护
-- [ ] 增加后端 stdout/stderr 日志轮转
-- [ ] 确保日志不包含 API Key、问题正文和答案正文
-- [ ] 应用退出时优雅关闭本次启动的后端进程
-- [ ] 后端异常退出时显示可重试状态
-- [ ] 增加启动中、已就绪、启动失败三种 UI 状态
-- [ ] 服务未就绪时禁用提问发送
-- [ ] 增加 Mac 签名/公证发布检查项
-- [ ] 增加 Windows 杀毒误报和签名发布检查项
-- [ ] 增加包体积和启动耗时记录
-- [ ] 验证 Mac 正式版双击启动、提问和退出清理
-- [ ] 验证 Windows x64 正式版双击启动、提问和退出清理
-- [ ] 更新 README、架构文档和测试报告
+- [x] Electron 主进程增加 `BackendProcessManager`
+- [x] 开发环境支持自动启动 Spring Boot
+- [x] 正式版纳入 Spring Boot 可执行 JAR
+- [x] Mac arm64 纳入匹配的 Java Runtime
+- [ ] Windows x64 纳入匹配的 Java Runtime（需 Windows 实机准备并验证）
+- [x] 增加 `/api/v1/health` 启动轮询，启动超时固定为 30 秒
+- [x] 增加 8080 端口占用检测和明确错误
+- [x] 增加单实例锁和重复后端启动保护
+- [x] 增加后端 stdout/stderr 日志轮转
+- [x] 确保日志不包含 API Key、问题正文和答案正文
+- [x] 应用退出时优雅关闭本次启动的后端进程
+- [x] 后端异常退出时显示可重试状态
+- [x] 增加启动中、已就绪、启动失败三种 UI 状态
+- [x] 服务未就绪时禁用提问发送
+- [x] 增加 Mac 签名/公证发布检查项
+- [x] 增加 Windows 杀毒误报和签名发布检查项
+- [x] 增加包体积和启动耗时记录
+- [x] 验证 Mac 正式版双击启动、提问和退出清理
+- [ ] 验证 Windows x64 正式版双击启动、提问和退出清理（需 Windows 实机）
+- [x] 更新 README、架构文档和测试报告

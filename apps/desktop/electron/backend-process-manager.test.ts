@@ -36,6 +36,7 @@ describe('BackendProcessManager', () => {
       userDataPath: '/tmp/qa-desktop',
       spawn,
       fetch,
+      portInUse: async () => false,
       clock: { sleep: async () => undefined }
     });
 
@@ -58,6 +59,7 @@ describe('BackendProcessManager', () => {
       userDataPath: '/tmp/qa-desktop',
       spawn: vi.fn(() => child),
       fetch: vi.fn().mockRejectedValue(new Error('connection refused')),
+      portInUse: async () => false,
       clock: { sleep: async () => undefined }
     });
 
@@ -74,6 +76,7 @@ describe('BackendProcessManager', () => {
       userDataPath: 'C:\\Users\\test\\AppData',
       spawn: vi.fn(() => child),
       fetch: vi.fn().mockRejectedValue(new Error('not ready')),
+      portInUse: async () => false,
       clock: {
         now: () => elapsed,
         sleep: async (milliseconds: number) => { elapsed += milliseconds; }
@@ -110,6 +113,7 @@ describe('BackendProcessManager', () => {
       userDataPath: '/tmp/qa-desktop',
       spawn: vi.fn(() => child),
       fetch: vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'UP' }), { status: 200 })),
+      portInUse: async () => false,
       clock: { sleep: async () => undefined }
     });
 
