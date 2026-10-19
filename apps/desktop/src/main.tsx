@@ -2,14 +2,36 @@ import { StrictMode, FormEvent, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { AiProvider, AiSettings, Conversation } from '@qa-desktop/shared-types';
+import type { AiProvider, AiSettings, ChatMessage as SharedChatMessage, Conversation } from '@qa-desktop/shared-types';
 import './styles.css';
 import yunheMark from './assets/yunhe-mark.png';
 
 type Theme = 'light' | 'dark';
 type Role = 'user' | 'assistant';
-type Message = { id: string; role: Role; content: string; createdAt: string };
+type Message = SharedChatMessage;
 type BackendStatus = { state: 'starting' | 'ready' | 'error' | 'stopped'; message?: string };
+
+function ThinkingBlock({ thinking }: { thinking: string }) {
+  const [open, setOpen] = useState(false);
+  if (!thinking) return null;
+  const preview = thinking.replace(/\s+/g, ' ').slice(0, 80);
+  return (
+    <div className="thinking-block">
+      <button type="button" className="thinking-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
+        <span className="thinking-dot" aria-hidden="true" />
+        <span className="thinking-label">{open ? '隐藏思考过程' : '已思考'}</span>
+        {!open && <span className="thinking-preview">{preview}{preview.length < thinking.replace(/\s+/g, ' ').length ? '…' : ''}</span>}
+        <span className={`thinking-chevron ${open ? 'open' : ''}`} aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="thinking-body">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{thinking}</ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const providerPresets: Record<AiProvider, { label: string; baseUrl: string; models: string[]; protocol: string }> = {
   deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-chat', 'deepseek-reasoner'], protocol: 'OpenAI 兼容 Chat Completions' },
   openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4.1-mini', 'gpt-4.1'], protocol: 'OpenAI Chat Completions' },
@@ -107,13 +129,13 @@ export function App() {
       const request = { conversationId, question: content, history: requestHistory, model: settings.model };
       let response = window.electronAPI
         ? await window.electronAPI.askQuestion(request)
-        : await new Promise<{ success: true; data: { messageId: string; answer: string } }>((resolve) => window.setTimeout(() => resolve({ success: true, data: { messageId: crypto.randomUUID(), answer: '这是浏览器预览回答。\n\n- Electron IPC 已在桌面端接入\n- 后续阶段将连接 Spring Boot' } }), 650));
+        : await new Promise<{ success: true; data: { messageId: string; answer: string; thinking?: string } }>((resolve) => window.setTimeout(() => resolve({ success: true, data: { messageId: crypto.randomUUID(), answer: '这是浏览器预览回答。\n\n- Electron IPC 已在桌面端接入\n- 后续阶段将连接 Spring Boot', thinking: '' } }), 650));
       if (!response.success && response.error?.code === 'DOCUMENT_SELECTION_REQUIRED' && window.electronAPI?.chooseDocument) {
         const document = await window.electronAPI.chooseDocument();
         if (document) response = await window.electronAPI.askQuestion({ ...request, document });
       }
       if (response.success && response.data) {
-        const assistantMessage = { id: response.data.messageId, role: 'assistant' as const, content: response.data.answer, createdAt: new Date().toISOString() };
+        const assistantMessage = { id: response.data.messageId, role: 'assistant' as const, content: response.data.answer, createdAt: new Date().toISOString(), thinking: response.data.thinking ?? '' };
         const nextMessages = [...messages, { id: crypto.randomUUID(), role: 'user' as const, content, createdAt }, assistantMessage];
         setMessages((current) => [...current, assistantMessage]);
         const saved = { id: conversationId, title: content.slice(0, 24), messages: nextMessages, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
@@ -146,7 +168,7 @@ export function App() {
         <header className="chat-header"><span className="chat-title">{conversations.find((conversation) => conversation.id === conversationId)?.title || '新对话'}</span><div className="header-actions"><button className="icon-button" type="button" aria-label={themeLabel} title={themeLabel} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? '☾' : '☀'}</button><span className={`connection-state ${backendReady ? 'ready' : 'not-ready'}`}><span className="status-dot" />{backendReady ? '后端已就绪' : backendStatus.state === 'error' ? '后端启动失败' : '正在连接后端'}</span></div></header>
         <section className={`message-area ${hasMessages ? 'has-messages' : ''}`} aria-live="polite">
           {!hasMessages && !isLoading ? <div className="welcome-state"><img className="welcome-mark" src={yunheMark} alt="yunhe" /><h1>有什么可以帮忙的？</h1><p>输入问题，开始一段新的对话。</p></div> : <div className="message-list">
-            {messages.map((message) => <article className={`message-row ${message.role}`} key={message.id}><div className="message-avatar" aria-hidden="true">{message.role === 'user' ? '你' : <img src={yunheMark} alt="yunhe" />}</div><div className="message-content">{message.role === 'assistant' ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children, ...props }) => <a {...props} href={href} onClick={(event) => { if (href && /^(https?):$/i.test(new URL(href).protocol)) { event.preventDefault(); void window.electronAPI?.openExternal?.(href); } }}>{children}</a> }}>{message.content}</ReactMarkdown> : <p>{message.content}</p>}</div></article>)}
+            {messages.map((message) => <article className={`message-row ${message.role}`} key={message.id}><div className="message-avatar" aria-hidden="true">{message.role === 'user' ? '你' : <img src={yunheMark} alt="yunhe" />}</div><div className="message-content">{message.role === 'assistant' ? <><ThinkingBlock thinking={message.thinking ?? ''} /><ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children, ...props }) => <a {...props} href={href} onClick={(event) => { if (href && /^(https?):$/i.test(new URL(href).protocol)) { event.preventDefault(); void window.electronAPI?.openExternal?.(href); } }}>{children}</a> }}>{message.content}</ReactMarkdown></> : <p>{message.content}</p>}</div></article>)}
             {isLoading && <div className="message-row assistant"><div className="message-avatar" aria-hidden="true"><img src={yunheMark} alt="yunhe" /></div><div className="message-content loading-dots" aria-label="正在生成回答"><span /><span /><span /></div></div>}
             {errorMessage && <div className="error-state" role="alert"><span>{errorMessage}</span><button type="button" onClick={() => { setMessages((current) => { const last = current[current.length - 1]; return last?.role === 'user' && last.content === lastFailedQuestion ? current.slice(0, -1) : current; }); setQuestion(lastFailedQuestion); setErrorMessage(null); }} aria-label="重新尝试">重新尝试</button></div>}
           </div>}

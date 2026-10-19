@@ -39,7 +39,7 @@ public class QuestionService {
                 answer = result.answer();
                 cache.put(key, answer);
                 var toolCalls = result.toolCalls();
-                var data = new QuestionResponse.Data(request.conversationId(), UUID.randomUUID().toString(), request.question().trim(), answer, toolCalls, Instant.now());
+                var data = new QuestionResponse.Data(request.conversationId(), UUID.randomUUID().toString(), request.question().trim(), answer, toolCalls, Instant.now(), result.thinking());
                 return QuestionResponse.success(data);
             } catch (RuntimeException exception) {
                 metrics.failure();

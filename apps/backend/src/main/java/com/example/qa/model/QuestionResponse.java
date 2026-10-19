@@ -4,7 +4,11 @@ import java.time.Instant;
 import java.util.List;
 
 public record QuestionResponse(boolean success, Data data, Error error) {
-    public record Data(String conversationId, String messageId, String question, String answer, List<String> toolCalls, Instant createdAt) {}
+    public record Data(String conversationId, String messageId, String question, String answer, List<String> toolCalls, Instant createdAt, String thinking) {
+        public Data(String conversationId, String messageId, String question, String answer, List<String> toolCalls, Instant createdAt) {
+            this(conversationId, messageId, question, answer, toolCalls, createdAt, "");
+        }
+    }
     public record Error(String code, String message, boolean retryable) {}
 
     public static QuestionResponse success(Data data) { return new QuestionResponse(true, data, null); }
