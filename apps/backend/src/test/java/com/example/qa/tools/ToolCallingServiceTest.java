@@ -23,4 +23,12 @@ class ToolCallingServiceTest {
 
         assertThat(service.answer(List.of(), "算一下")).isEqualTo("最终答案：4");
     }
+
+    @Test
+    void searchIntentExecutesSearchToolWithoutDependingOnModelToolCalling() {
+        var service = new ToolCallingService((history, question) -> "模型不应先回答", new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+
+        assertThat(service.answer(List.of(), "现在可以联网搜索 AI 新闻吗"))
+                .contains("Google News", "Bing News");
+    }
 }

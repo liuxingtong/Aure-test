@@ -21,6 +21,9 @@ public class ToolCallingService {
     }
 
     public String answer(List<ChatMessage> history, String question) {
+        if (isSearchRequest(question)) {
+            return registry.execute("search_latest_news", new ObjectMapper().createObjectNode().put("query", question.trim()));
+        }
         var context = new ArrayList<>(history == null ? List.of() : history);
         var answer = aiClient.chat(context, question);
         var callsUsed = 0;
@@ -35,5 +38,13 @@ public class ToolCallingService {
             }
             answer = aiClient.chat(context, question);
         }
+    }
+
+    private boolean isSearchRequest(String question) {
+        if (question == null || question.isBlank()) return false;
+        var normalized = question.toLowerCase();
+        return normalized.contains("搜索") || normalized.contains("联网") || normalized.contains("新闻")
+                || normalized.contains("查一下") || normalized.contains("查找") || normalized.contains("latest news")
+                || normalized.contains("web search") || normalized.contains("browse");
     }
 }
