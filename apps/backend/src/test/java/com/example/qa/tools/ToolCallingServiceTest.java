@@ -36,9 +36,45 @@ class ToolCallingServiceTest {
 
     @Test
     void parsesToolCallEmbeddedInNaturalLanguageAndHidesProtocolJson() {
-        AiClient client = (history, question) -> "我来搜索一下：{\"tool_calls\":[{\"name\":\"search_latest_news\",\"arguments\":{\"query\":\"AI\"}}]}";
+        var calls = new AtomicInteger();
+        AiClient client = (history, question) -> {
+            if (calls.getAndIncrement() == 0) {
+                return "我来搜索一下：{\"tool_calls\":[{\"name\":\"search_latest_news\",\"arguments\":{\"query\":\"AI\"}}]}";
+            }
+            return "下面是新闻链接，请查收。";
+        };
         var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
 
-        assertThat(service.answer(List.of(), "热门 AI 新闻")).contains("Google News").doesNotContain("tool_calls");
+        assertThat(service.answer(List.of(), "热门 AI 新闻")).contains("Google News").doesNotContain("tool_calls").doesNotContain("{\"tool_calls\"");
+        assertThat(calls).hasValue(2);
+    }
+
+    @Test
+    void forcesFinalAnswerAfterMaxCallsAreExhausted() {
+        // 永远返回 tool call，验证不会无限循环——用尽 MAX_CALLS 后应被强制要答案
+        AiClient client = (history, question) -> "{\"tool_calls\":[{\"name\":\"calculate\",\"arguments\":{\"expression\":\"1+1\"}}]}";
+        var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+
+        // 第 7 次调用（6 次工具 + 1 次强制终答）应返回非空答案
+        var result = service.answerWithTools(List.of(), "算 1+1", null);
+
+        assertThat(result.answer()).isNotEmpty();
+        assertThat(result.toolCalls()).hasSize(ToolCallingService.MAX_CALLS);
+    }
+
+    @Test
+    void preservesLeadInNaturalLanguageBeforeFirstToolCall() {
+        var calls = new AtomicInteger();
+        AiClient client = (history, question) -> {
+            if (calls.getAndIncrement() == 0) {
+                return "我先算一下，稍等。\n{\"tool_calls\":[{\"name\":\"calculate\",\"arguments\":{\"expression\":\"2+2\"}}]}";
+            }
+            return "最终结果：4";
+        };
+        var service = new ToolCallingService(client, new ToolRegistry(new CalculateTool(), new SearchLatestNewsTool()), new ObjectMapper());
+
+        var result = service.answerWithTools(List.of(), "算一下", null);
+
+        assertThat(result.answer()).contains("我先算一下").contains("最终结果：4");
     }
 }
