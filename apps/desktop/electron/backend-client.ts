@@ -24,7 +24,13 @@ export async function askBackend(request: AskQuestionRequest): Promise<AskQuesti
         signal: controller.signal
       });
       const payload = await response.json() as AskQuestionResponse;
-      if (!response.ok) return payload;
+      if (!response.ok) {
+        if (payload.error?.retryable && attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
+          continue;
+        }
+        return payload;
+      }
       return payload;
     } catch (error) {
       lastError = error;
