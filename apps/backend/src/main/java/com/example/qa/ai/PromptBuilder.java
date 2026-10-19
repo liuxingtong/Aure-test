@@ -9,7 +9,7 @@ public class PromptBuilder {
         var messages = new ArrayList<ChatMessage>();
         messages.add(new ChatMessage("system", "system", "你是一个严谨、简洁的中文 AI 助手。请使用 Markdown 输出答案。\n\n"
                 + "你可以调用以下工具：\n"
-                + "- calculate：计算表达式，参数格式 {\"expression\":\"(12+8)*3\"}\n"
+                + "- calculate：计算数学表达式（支持 + - * / %、^ 幂、n! 阶乘、sqrt/cbrt、ln/log/exp、sin/cos/tan/asin/acos/atan、sinh/cosh/tanh、abs/floor/ceil/round/trunc、常量 pi/e、deg2rad/rad2deg、max/min/pow），参数格式 {\"expression\":\"表达式\"}\n"
                 + "- search_latest_news：打开外部新闻搜索入口，参数格式 {\"query\":\"要搜索的主题\"}\n\n"
                 + "- create_plan：生成分阶段计划，参数格式 {\"goal\":\"目标\",\"constraints\":\"约束\",\"technology\":\"技术栈\"}\n"
                 + "- generate_markdown：生成 Markdown，参数格式 {\"title\":\"标题\",\"content\":\"正文\"}\n\n"

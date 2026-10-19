@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.Map;
 import com.example.qa.monitoring.TraceWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+record ChatResult(String content, String thinking) {}
 
 abstract class AbstractChatCompletionsAdapter implements ProviderAdapter {
     private static final Logger log = LoggerFactory.getLogger(AbstractChatCompletionsAdapter.class);
@@ -33,12 +36,16 @@ abstract class AbstractChatCompletionsAdapter implements ProviderAdapter {
     @Override
     @SuppressWarnings("unchecked")
     public String chat(List<ChatMessage> history, String question) {
-        return chat(history, question, null);
+        return chatWithThinking(history, question, null).content();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public String chat(List<ChatMessage> history, String question, String model) {
+        return chatWithThinking(history, question, model).content();
+    }
+
+    public ChatResult chatWithThinking(List<ChatMessage> history, String question, String model) {
         var messages = promptBuilder.build(history, question).stream()
                 .map(message -> Map.of("role", message.role(), "content", message.content())).toList();
         var body = Map.of("model", model == null || model.isBlank() ? properties.model() : model, "messages", messages);
@@ -56,11 +63,32 @@ abstract class AbstractChatCompletionsAdapter implements ProviderAdapter {
             var response = mapper.readTree(rawResponse);
             var choices = response.path("choices");
             if (!choices.isArray() || choices.isEmpty()) throw new IllegalStateException("AI 返回结果为空");
-            return MarkdownNormalizer.normalize(choices.get(0).path("message").path("content").asText("暂无回答"));
+            var message = choices.get(0).path("message");
+            var content = MarkdownNormalizer.normalize(message.path("content").asText(""));
+            var thinking = extractThinking(message);
+            if (!thinking.isBlank()) {
+                traceWriter.write(Map.of("traceId", traceId, "type", "model_thinking", "provider", properties.provider(), "thinking", thinking));
+            }
+            return new ChatResult(content, thinking);
         } catch (IllegalStateException exception) {
             throw exception;
         } catch (Exception exception) {
             throw new IllegalStateException("AI 返回 JSON 无效", exception);
         }
+    }
+
+    /**
+     * 提取模型思考字段。兼容 deepseek-reasoner 等会把推理放在 reasoning_content 的服务，
+     * 以及把思考放在 reasoning/reflection 字段的兼容服务。
+     */
+    private String extractThinking(JsonNode message) {
+        var thinking = message.path("reasoning_content");
+        if (thinking.isMissingNode() || thinking.isNull() || thinking.asText().isBlank()) {
+            thinking = message.path("reasoning");
+        }
+        if (thinking.isMissingNode() || thinking.isNull() || thinking.asText().isBlank()) {
+            thinking = message.path("reflection");
+        }
+        return thinking.isMissingNode() || thinking.isNull() ? "" : thinking.asText();
     }
 }

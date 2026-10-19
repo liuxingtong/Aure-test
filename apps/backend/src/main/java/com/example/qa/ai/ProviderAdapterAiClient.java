@@ -23,8 +23,13 @@ public class ProviderAdapterAiClient implements AiClient {
 
     @Override
     public String chat(List<ChatMessage> history, String question, String model) {
+        return chatWithThinking(history, question, model).content();
+    }
+
+    @Override
+    public ChatResult chatWithThinking(List<ChatMessage> history, String question, String model) {
         return adapters.stream().filter(adapter -> adapter.provider().equals(properties.provider())).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("不支持的 AI Provider: " + properties.provider()))
-                .chat(history, question, model);
+                .chatWithThinking(history, question, model);
     }
 }

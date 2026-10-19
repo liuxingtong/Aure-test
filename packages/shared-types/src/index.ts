@@ -5,6 +5,7 @@ export interface ChatMessage {
   role: MessageRole;
   content: string;
   createdAt: string;
+  thinking?: string;
 }
 
 export interface Conversation {
@@ -38,6 +39,6 @@ export interface AskQuestionRequest {
 
 export interface AskQuestionResponse {
   success: boolean;
-  data?: { messageId: string; answer: string; toolCalls?: string[] };
+  data?: { messageId: string; answer: string; toolCalls?: string[]; thinking?: string };
   error?: { code: string; message: string; retryable: boolean };
 }

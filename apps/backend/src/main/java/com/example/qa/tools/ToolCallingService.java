@@ -19,7 +19,9 @@ public class ToolCallingService {
     private final ToolCallParser parser;
     private final TraceWriter traceWriter;
 
-    public record AnswerResult(String answer, List<String> toolCalls) {}
+    public record AnswerResult(String answer, List<String> toolCalls, String thinking) {
+        public AnswerResult(String answer, List<String> toolCalls) { this(answer, toolCalls, ""); }
+    }
 
     public ToolCallingService(AiClient aiClient, ToolRegistry registry, ObjectMapper mapper) {
         this(aiClient, registry, mapper, new TraceWriter((java.nio.file.Path) null, mapper));
@@ -48,13 +50,15 @@ public class ToolCallingService {
         }
         var context = new ArrayList<>(history == null ? List.of() : history);
         var traceId = java.util.UUID.randomUUID().toString();
-        var answer = aiClient.chat(context, question, model);
-        traceWriter.write(java.util.Map.of("traceId", traceId, "type", "model_output", "model", model == null ? "" : model, "question", question, "history", context, "content", answer));
+        var firstTurn = aiClient.chatWithThinking(context, question, model);
+        var answer = firstTurn.content();
+        var thinking = new StringBuilder(firstTurn.thinking() == null ? "" : firstTurn.thinking());
+        traceWriter.write(java.util.Map.of("traceId", traceId, "type", "model_output", "model", model == null ? "" : model, "question", question, "history", context, "content", answer, "thinking", thinking.toString()));
         var callsUsed = 0;
         var toolCalls = new ArrayList<String>();
         while (true) {
             var calls = parser.parse(answer);
-            if (calls.isEmpty()) return new AnswerResult(answer, List.copyOf(toolCalls));
+            if (calls.isEmpty()) return new AnswerResult(answer, List.copyOf(toolCalls), thinking.toString());
             if (callsUsed + calls.size() > MAX_CALLS) throw new IllegalStateException("工具调用次数超过上限");
             for (var call : calls) {
                 var arguments = call.arguments();
@@ -65,8 +69,13 @@ public class ToolCallingService {
                 toolCalls.add(call.name());
                 callsUsed++;
             }
-            answer = aiClient.chat(context, question, model);
-            traceWriter.write(java.util.Map.of("traceId", traceId, "type", "model_output", "model", model == null ? "" : model, "question", question, "history", context, "content", answer));
+            var nextTurn = aiClient.chatWithThinking(context, question, model);
+            answer = nextTurn.content();
+            if (nextTurn.thinking() != null && !nextTurn.thinking().isBlank()) {
+                if (thinking.length() > 0) thinking.append("\n\n---\n\n");
+                thinking.append(nextTurn.thinking());
+            }
+            traceWriter.write(java.util.Map.of("traceId", traceId, "type", "model_output", "model", model == null ? "" : model, "question", question, "history", context, "content", answer, "thinking", thinking.toString()));
         }
     }
 
