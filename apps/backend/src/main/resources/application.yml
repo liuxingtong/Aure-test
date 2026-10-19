@@ -10,5 +10,5 @@ ai:
   provider: ${AI_PROVIDER:deepseek}
   base-url: ${AI_BASE_URL:https://api.deepseek.com}
   api-key: ${AI_API_KEY:}
-  model: ${AI_MODEL:deepseek-flash}
+  model: ${AI_MODEL:deepseek-chat}
   timeout: ${AI_TIMEOUT:30s}

@@ -11,10 +11,18 @@ type Role = 'user' | 'assistant';
 type Message = { id: string; role: Role; content: string; createdAt: string };
 type BackendStatus = { state: 'starting' | 'ready' | 'error' | 'stopped'; message?: string };
 const providerPresets: Record<AiProvider, { label: string; baseUrl: string; models: string[]; protocol: string }> = {
-  deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-flash', 'deepseek-v4-pro'], protocol: 'OpenAI 兼容 Chat Completions（支持 Responses API）' },
-  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-cyber'], protocol: 'OpenAI Chat Completions' },
+  deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-chat', 'deepseek-reasoner'], protocol: 'OpenAI 兼容 Chat Completions' },
+  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4.1-mini', 'gpt-4.1'], protocol: 'OpenAI Chat Completions' },
   'openai-compatible': { label: 'OpenAI 兼容服务', baseUrl: 'http://localhost:11434/v1', models: [], protocol: 'OpenAI 兼容 Chat Completions' }
 };
+function normalizeSettings(value: AiSettings): AiSettings {
+  const preset = providerPresets[value.provider];
+  const legacyModels = new Set(['deepseek-flash', 'deepseek-v4-pro', 'gpt-6-astra', 'gpt-6.1-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-cyber']);
+  if (legacyModels.has(value.model) || (preset.models.length > 0 && !preset.models.includes(value.model))) {
+    return { ...value, model: preset.models[0] };
+  }
+  return value;
+}
 export function App() {
   const [theme, setTheme] = useState<Theme>('light');
   const [question, setQuestion] = useState('');
@@ -39,7 +47,7 @@ export function App() {
 
   useEffect(() => {
     void window.electronAPI?.listHistory().then((items) => setConversations(items));
-    void window.electronAPI?.getAiSettings?.().then((saved) => { if (saved) setSettings(saved); });
+    void window.electronAPI?.getAiSettings?.().then((saved) => { if (saved) setSettings(normalizeSettings(saved)); });
     if (!window.electronAPI) return;
     let active = true;
     void window.electronAPI.getBackendStatus().then((status) => { if (active) setBackendStatus(status); });
@@ -67,7 +75,9 @@ export function App() {
   }
 
   async function saveSettings() {
-    const saved = await window.electronAPI?.saveAiSettings?.(settings);
+    const normalized = normalizeSettings(settings);
+    setSettings(normalized);
+    const saved = await window.electronAPI?.saveAiSettings?.(normalized);
     if (saved) setSettings(saved);
     setSettingsSaved(true);
     window.setTimeout(() => setSettingsSaved(false), 1800);

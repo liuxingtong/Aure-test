@@ -14,6 +14,12 @@ export const defaultAiSettings: AiSettings = {
 type StoredSettings = Omit<AiSettings, 'apiKey'> & { apiKey: string };
 export type SecretCodec = { encrypt(value: string): string; decrypt(value: string): string };
 
+function normalizeModel(provider: AiSettings['provider'], model: string): string {
+  if (provider === 'deepseek' && ['deepseek-flash', 'deepseek-v4-pro'].includes(model)) return 'deepseek-chat';
+  if (provider === 'openai' && ['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-cyber'].includes(model)) return 'gpt-4.1-mini';
+  return model;
+}
+
 export class SettingsStore {
   private cached: AiSettings | undefined;
   constructor(private readonly filePath: string, private readonly secretCodec?: SecretCodec) {}
@@ -23,7 +29,8 @@ export class SettingsStore {
     try {
       const raw = JSON.parse(await fs.readFile(this.filePath, 'utf8')) as Partial<StoredSettings>;
       const storedKey = typeof raw.apiKey === 'string' ? raw.apiKey : '';
-      this.cached = { ...defaultAiSettings, ...raw, apiKey: this.secretCodec && storedKey.startsWith('enc:') ? this.secretCodec.decrypt(storedKey.slice(4)) : storedKey };
+      const merged = { ...defaultAiSettings, ...raw, apiKey: this.secretCodec && storedKey.startsWith('enc:') ? this.secretCodec.decrypt(storedKey.slice(4)) : storedKey };
+      this.cached = { ...merged, model: normalizeModel(merged.provider, merged.model) };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
       this.cached = { ...defaultAiSettings };
