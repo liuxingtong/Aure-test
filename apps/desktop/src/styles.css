@@ -6,7 +6,7 @@ button, textarea { font: inherit; } button { cursor: pointer; }
 .app-shell[data-theme="dark"] { --bg-primary:#212121; --bg-secondary:#2f2f2f; --bg-tertiary:#424242; --text-primary:#ececec; --text-secondary:#b4b4b4; --border-color:#484848; --accent-color:#19c37d; }
 .sidebar { display:flex; flex:0 0 260px; flex-direction:column; padding:14px 12px; background:var(--bg-secondary); border-right:1px solid var(--border-color); }
 .sidebar-header { display:flex; align-items:center; gap:10px; height:42px; padding:0 10px; font-size:14px; font-weight:600; }
-.app-mark,.welcome-mark { display:grid; place-items:center; color:#fff; background:var(--accent-color); border-radius:8px; font-weight:700; } .app-mark { width:26px; height:26px; font-size:14px; }
+.app-mark,.welcome-mark { display:block; object-fit:contain; background:var(--accent-color); border-radius:8px; } .app-mark { width:26px; height:26px; padding:2px; }
 .new-chat-button,.sidebar-action { display:flex; align-items:center; gap:10px; width:100%; padding:10px; color:var(--text-primary); text-align:left; background:transparent; border:1px solid transparent; border-radius:8px; }
 .new-chat-button { margin-top:14px; border-color:var(--border-color); } .new-chat-button:hover,.sidebar-action:hover,.conversation-item:hover { background:var(--bg-tertiary); }
 .button-icon { width:18px; color:var(--text-secondary); text-align:center; font-size:18px; line-height:1; }
@@ -19,7 +19,7 @@ button, textarea { font: inherit; } button { cursor: pointer; }
 .header-actions { display:flex; align-items:center; gap:16px; } .icon-button { display:grid; place-items:center; width:30px; height:30px; color:var(--text-primary); background:transparent; border:0; border-radius:7px; font-size:18px; } .icon-button:hover { background:var(--bg-tertiary); }
 .connection-state { display:flex; align-items:center; gap:7px; color:var(--text-secondary); font-size:12px; } .status-dot { width:7px; height:7px; background:var(--accent-color); border-radius:50%; }
 .message-area { flex:1; overflow-y:auto; } .welcome-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding-bottom:100px; text-align:center; }
-.welcome-mark { width:42px; height:42px; margin-bottom:18px; border-radius:12px; font-size:21px; } .welcome-state h1 { margin:0; font-size:25px; font-weight:600; letter-spacing:-.02em; } .welcome-state p { margin:10px 0 0; color:var(--text-secondary); font-size:14px; }
+.welcome-mark { width:52px; height:52px; margin-bottom:18px; padding:5px; border-radius:14px; } .welcome-state h1 { margin:0; font-size:25px; font-weight:600; letter-spacing:-.02em; } .welcome-state p { margin:10px 0 0; color:var(--text-secondary); font-size:14px; }
 .message-list { width:min(100%,800px); margin:0 auto; padding:30px 28px 150px; } .message-row { display:flex; gap:14px; padding:18px 0; line-height:1.65; }
 .message-avatar { display:grid; flex:0 0 30px; place-items:center; width:30px; height:30px; color:var(--text-primary); background:var(--bg-tertiary); border-radius:6px; font-size:12px; font-weight:600; } .message-row.assistant .message-avatar { color:#fff; background:var(--accent-color); }
 .message-content { min-width:0; flex:1; font-size:15px; } .message-content p { margin:0; white-space:pre-wrap; } .message-content h1,.message-content h2,.message-content h3 { margin:0 0 10px; line-height:1.3; }
