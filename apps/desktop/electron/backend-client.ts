@@ -1,8 +1,17 @@
 import type { AskQuestionRequest, AskQuestionResponse } from '@qa-desktop/shared-types';
 
+let backendReady = true;
+
+export function setBackendReady(ready: boolean): void {
+  backendReady = ready;
+}
+
 const backendUrl = process.env.QA_BACKEND_URL ?? 'http://127.0.0.1:8080';
 
 export async function askBackend(request: AskQuestionRequest): Promise<AskQuestionResponse> {
+  if (!backendReady) {
+    return { success: false, error: { code: 'BACKEND_STARTING', message: '后端服务正在启动，请稍后重试。', retryable: true } };
+  }
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const controller = new AbortController();
