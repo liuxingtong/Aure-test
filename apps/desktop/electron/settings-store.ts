@@ -31,6 +31,7 @@ export class SettingsStore {
       const storedKey = typeof raw.apiKey === 'string' ? raw.apiKey : '';
       const merged = { ...defaultAiSettings, ...raw, apiKey: this.secretCodec && storedKey.startsWith('enc:') ? this.secretCodec.decrypt(storedKey.slice(4)) : storedKey };
       this.cached = { ...merged, model: normalizeModel(merged.provider, merged.model) };
+      if (this.cached.model !== merged.model) await this.write(this.cached);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
       this.cached = { ...defaultAiSettings };
@@ -40,9 +41,13 @@ export class SettingsStore {
 
   async save(settings: AiSettings): Promise<AiSettings> {
     this.cached = { ...defaultAiSettings, ...settings };
-    await fs.mkdir(path.dirname(this.filePath), { recursive: true });
-    const stored = { ...this.cached, apiKey: this.secretCodec && this.cached.apiKey ? `enc:${this.secretCodec.encrypt(this.cached.apiKey)}` : '' };
-    await fs.writeFile(this.filePath, JSON.stringify(stored, null, 2), { encoding: 'utf8', mode: 0o600 });
+    await this.write(this.cached);
     return { ...this.cached };
+  }
+
+  private async write(settings: AiSettings): Promise<void> {
+    await fs.mkdir(path.dirname(this.filePath), { recursive: true });
+    const stored = { ...settings, apiKey: this.secretCodec && settings.apiKey ? `enc:${this.secretCodec.encrypt(settings.apiKey)}` : '' };
+    await fs.writeFile(this.filePath, JSON.stringify(stored, null, 2), { encoding: 'utf8', mode: 0o600 });
   }
 }

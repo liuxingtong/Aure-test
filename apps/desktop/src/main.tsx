@@ -60,8 +60,11 @@ export function App() {
     const loadModels = async () => {
       const fetched = await window.electronAPI?.listAiModels?.(settings);
       if (active && fetched?.length) {
-        setAvailableModels(fetched);
-        if (!fetched.includes(settings.model)) setSettings((current) => ({ ...current, model: fetched[0] }));
+        const allowed = settings.provider === 'deepseek' ? providerPresets.deepseek.models : settings.provider === 'openai' ? providerPresets.openai.models : fetched;
+        const filtered = fetched.filter((model) => allowed.includes(model));
+        const models = filtered.length ? filtered : (settings.provider === 'openai-compatible' ? fetched : allowed);
+        setAvailableModels(models);
+        if (!models.includes(settings.model)) setSettings((current) => ({ ...current, model: models[0] }));
       }
     };
     void loadModels();
