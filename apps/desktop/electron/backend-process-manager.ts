@@ -37,6 +37,7 @@ type BackendProcessManagerOptions = {
   fetch?: typeof globalThis.fetch;
   clock?: Clock;
   portInUse?: () => Promise<boolean>;
+  getEnvironment?: () => NodeJS.ProcessEnv;
 };
 
 const BACKEND_HOST = '127.0.0.1';
@@ -88,7 +89,7 @@ export class BackendProcessManager {
     const command = this.command();
     const child = this.spawn(command.command, command.args, {
       cwd: command.cwd,
-      env: { ...process.env, AI_ENABLED: process.env.AI_ENABLED ?? 'false' }
+      env: { ...process.env, ...(this.options.getEnvironment?.() ?? {}), AI_ENABLED: this.options.getEnvironment?.().AI_ENABLED ?? process.env.AI_ENABLED ?? 'false' }
     });
     this.child = child;
     this.attachOutput(child);

@@ -25,6 +25,14 @@ export class HistoryRepository {
     await this.flush();
   }
 
+  async setArchived(id: string, archived: boolean): Promise<void> {
+    await this.ensureLoaded();
+    const conversation = this.cache.get(id);
+    if (!conversation) return;
+    this.cache.set(id, { ...conversation, archived, updatedAt: new Date().toISOString() });
+    await this.flush();
+  }
+
   async clear(): Promise<void> {
     await this.ensureLoaded();
     this.cache.clear();

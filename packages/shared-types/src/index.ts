@@ -13,6 +13,18 @@ export interface Conversation {
   messages: ChatMessage[];
   createdAt: string;
   updatedAt: string;
+  archived?: boolean;
+}
+
+export type AiProvider = 'deepseek' | 'openai' | 'openai-compatible';
+
+export interface AiSettings {
+  provider: AiProvider;
+  baseUrl: string;
+  model: string;
+  apiKey: string;
+  memoryEnabled: boolean;
+  memory: string;
 }
 
 export interface AskQuestionRequest {

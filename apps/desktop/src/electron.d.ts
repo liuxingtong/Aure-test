@@ -1,4 +1,4 @@
-import type { AskQuestionRequest, AskQuestionResponse, Conversation } from '@qa-desktop/shared-types';
+import type { AiSettings, AskQuestionRequest, AskQuestionResponse, Conversation } from '@qa-desktop/shared-types';
 import type { BackendStatus } from '../electron/backend-process-manager';
 
 interface ElectronAPI {
@@ -6,11 +6,14 @@ interface ElectronAPI {
   listHistory(): Promise<Conversation[]>;
   saveHistory(conversation: Conversation): Promise<void>;
   deleteHistory(id: string): Promise<void>;
+  setConversationArchived?(id: string, archived: boolean): Promise<void>;
   clearHistory(): Promise<void>;
   getVersion(): Promise<string>;
   checkBackend(): Promise<boolean>;
   getBackendStatus(): Promise<BackendStatus>;
   restartBackend(): Promise<BackendStatus>;
+  getAiSettings?(): Promise<AiSettings>;
+  saveAiSettings?(settings: AiSettings): Promise<AiSettings>;
   onBackendStatus(listener: (status: BackendStatus) => void): () => void;
 }
 

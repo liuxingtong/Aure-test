@@ -1,8 +1,9 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, safeStorage } from 'electron';
 import path from 'node:path';
 import { BackendStatusBroadcaster, registerIpcHandlers } from './ipc';
 import { BackendProcessManager } from './backend-process-manager';
 import { setBackendReady } from './backend-client';
+import { SettingsStore } from './settings-store';
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let isQuitting = false;
@@ -32,12 +33,17 @@ function createWindow() {
 app.whenReady().then(() => {
   if (!hasSingleInstanceLock) return;
   const statusBroadcaster = new BackendStatusBroadcaster();
+  const settingsStore = new SettingsStore(path.join(app.getPath('userData'), 'settings.json'), {
+    encrypt: (value) => safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(value).toString('base64') : value,
+    decrypt: (value) => safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(value, 'base64')) : value
+  });
   const backendManager = new BackendProcessManager({
     mode: app.isPackaged ? 'production' : 'development',
     platform: process.platform,
     resourcesPath: process.resourcesPath,
     userDataPath: app.getPath('userData'),
-    projectRoot: path.resolve(__dirname, '../../..')
+    projectRoot: path.resolve(__dirname, '../../..'),
+    getEnvironment: () => process.env
   });
   backendManager.onStatusChange((status) => {
     setBackendReady(status.state === 'ready');
@@ -46,10 +52,25 @@ app.whenReady().then(() => {
   });
   registerIpcHandlers(
     new HistoryRepository(path.join(app.getPath('userData'), 'conversations.json')),
+    settingsStore,
     () => statusBroadcaster.current(),
-    async () => { await backendManager.stop(); return backendManager.start(); }
+    async () => {
+      await backendManager.stop();
+      const settings = await settingsStore.get();
+      process.env.AI_ENABLED = settings.apiKey ? 'true' : 'false';
+      process.env.AI_BASE_URL = settings.baseUrl;
+      process.env.AI_MODEL = settings.model;
+      process.env.AI_API_KEY = settings.apiKey;
+      return backendManager.start();
+    }
   );
-  const startup = backendManager.start();
+  const startup = settingsStore.get().then((settings) => {
+    process.env.AI_ENABLED = settings.apiKey ? 'true' : 'false';
+    process.env.AI_BASE_URL = settings.baseUrl;
+    process.env.AI_MODEL = settings.model;
+    process.env.AI_API_KEY = settings.apiKey;
+    return backendManager.start();
+  });
   createWindow();
   void startup;
   app.on('before-quit', (event) => {
